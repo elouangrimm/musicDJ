@@ -324,7 +324,7 @@ class PromptDjController extends LitElement {
         { "color": "#A8C7FA", "text": "Chillwave" },
         { "color": "#F48FB1", "text": "Drum and Bass" },
         { "color": "#80DEEA", "text": "Post Punk" },
-        { "color": "#FFE082", "text": "Shoegaze" },
+        { "color": "#FFE082", "text": "Orchestral Symphony" },
         { "color": "#A5D6A7", "text": "Funk" },
         { "color": "#CE93D8", "text": "Chiptune" },
         { "color": "#C5E1A5", "text": "Lush Strings" },
