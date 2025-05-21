@@ -89,6 +89,10 @@ class ToastMessage extends LitElement {
       </div>`;
   }
 
+  override createRenderRoot() {
+    return this; // This makes the component render its template into the Light DOM
+  }
+
   show(message: string, duration = 5000) {
     this.message = message;
     this.showing = true;
@@ -109,6 +113,11 @@ class IconButtonBase extends LitElement {
   protected renderIcon() {
     return svg``;
   }
+
+  override createRenderRoot() {
+    return this; // This makes the component render its template into the Light DOM
+  }
+
   override render() {
     return html`
         <button class="icon-button" part="button" aria-label=${this.getAttribute('aria-label') || 'icon button'}>
@@ -138,6 +147,10 @@ export class PlayPauseButton extends IconButtonBase {
             <circle class="loader-bg" cx="12" cy="12" r="10" />
             <circle class="loader-fg" cx="12" cy="12" r="10" />
         </svg>`;
+  }
+
+  override createRenderRoot() {
+    return this; // This makes the component render its template into the Light DOM
   }
 
   override renderIcon() {
@@ -240,6 +253,10 @@ class PromptController extends LitElement {
     this.dispatchPromptChange();
   }
 
+  override createRenderRoot() {
+    return this; // This makes the component render its template into the Light DOM
+  }
+
   override render() {
     const haloStyle = styleMap({
         '--prompt-halo-color': this.color,
@@ -312,6 +329,10 @@ class PromptDjController extends LitElement {
     super();
     this.prompts = getInitialPrompts();
     this.initializeAudioContext(); // Initialize on creation
+  }
+
+  override createRenderRoot() {
+    return this; // This makes the component render its template into the Light DOM
   }
 
   private initializeAudioContext() {
