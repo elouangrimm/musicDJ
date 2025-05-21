@@ -38,7 +38,7 @@
 
     --slider-thumb-size: 18px;
     --slider-track-height: 4px;
-    /* This is the VISIBLE track height */
+    /* Visible track height */
     --slider-track-background-off: var(--md-sys-color-surface-variant);
 
     font-synthesis: none;
@@ -418,59 +418,52 @@ prompt-controller[filtered] .prompt-text-input {
     width: 100%;
     display: flex;
     align-items: center;
-    /* The container should be tall enough for the thumb + any visual padding */
+    /* Container height should accommodate the thumb's full diameter + a little padding */
     height: calc(var(--slider-thumb-size) + 8px);
     /* e.g., 18px + 8px = 26px */
     margin: 4px 0;
     box-sizing: border-box;
-    /* Include padding in height calculation */
-    /* For debugging track alignment: */
-    /* border: 1px solid red; */
 }
 
 .weight-slider {
     -webkit-appearance: none;
     appearance: none;
     width: 100%;
-    /* The input element's own height should be primarily for the thumb to interact with.
-       The visible track is styled within its pseudo-elements. */
-    height: var(--slider-thumb-size);
-    /* Make input element height same as thumb for easier WebKit centering */
+    /* CRITICAL: Ensure the input itself spans the full desired width */
+    height: var(--slider-track-height);
+    /* Input element's height IS the track height */
     background: transparent;
-    /* Input element itself is transparent */
+    /* Input element itself is transparent for WebKit, track styled by pseudo */
+    /* For Firefox/MS, this might be the 'unfilled' track color */
     outline: none;
     cursor: pointer;
+    border-radius: var(--border-radius-full);
+    /* Apply to input for FF/MS track rounding */
     margin: 0;
     padding: 0;
-    /* Critical to prevent offset */
     display: block;
-    position: relative;
-    /* Needed for the track pseudo-element to be positioned within */
 }
 
+/* --- WebKit (Chrome, Safari, Edge) --- */
 .weight-slider::-webkit-slider-runnable-track {
     width: 100%;
+    /* CRITICAL: Track pseudo-element must also be 100% */
     height: var(--slider-track-height);
-    /* The visible track bar height */
     cursor: pointer;
-    /* The gradient defines the fill and the unfilled part */
     background: linear-gradient(to right,
-            var(--slider-thumb-color, var(--md-sys-color-primary)) 0%,
-            /* Start of filled color */
             var(--slider-thumb-color, var(--md-sys-color-primary)) var(--slider-fill-percent, 0%),
-            /* End of filled color, start of unfilled */
-            var(--slider-track-background-off) var(--slider-fill-percent, 0%),
-            /* Start of unfilled color */
-            var(--slider-track-background-off) 100%
-            /* End of unfilled color */
+            /* Color stops at fill percent */
+            var(--slider-track-background-off) var(--slider-fill-percent, 0%)
+            /* Background starts at fill percent */
         );
+    /*
+        Explanation of the gradient:
+        1. From 0% to --slider-fill-percent: Use --slider-thumb-color.
+        2. From --slider-fill-percent to 100%: Use --slider-track-background-off.
+        This creates a sharp division.
+    */
     border-radius: var(--border-radius-full);
     border: none;
-    /* Position the track in the middle of the taller input element */
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    left: 0;
 }
 
 .weight-slider::-webkit-slider-thumb {
@@ -485,17 +478,17 @@ prompt-controller[filtered] .prompt-text-input {
     box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
     transition: transform 0.1s ease-out;
     /*
-      When the input element's height is the same as the thumb's height,
-      and the track is absolutely positioned and centered within that input,
-      the thumb should also be centered by default or require minimal adjustment.
-      No margin-top should be needed here IF the input height matches thumb height.
+      Centering the thumb on the track:
+      The thumb is taller than the track. We need to pull it upwards.
+      (track_height - thumb_height) / 2
+      Example: (4px - 18px) / 2 = -14px / 2 = -7px
     */
+    margin-top: calc((var(--slider-track-height) - var(--slider-thumb-size)) / 2);
     position: relative;
-    /* Ensure thumb is drawn on top of the track pseudo-element */
+    /* Ensure it's above the track */
     z-index: 2;
 }
 
-/* ... Webkit hover/active ... */
 .weight-slider::-webkit-slider-thumb:hover {
     transform: scale(1.1);
 }
@@ -506,12 +499,19 @@ prompt-controller[filtered] .prompt-text-input {
 
 
 /* --- Mozilla Firefox --- */
-/* Firefox styles should remain largely the same as they use native progress */
+/* Set background on input for Firefox's track's unfilled part */
+.weight-slider {
+    /* ... existing .weight-slider styles ... */
+    /* For Firefox, the input's background can be the track's off state */
+    /* background: var(--slider-track-background-off); -- This was in the input, let's ensure it's specifically on track */
+}
+
 .weight-slider::-moz-range-track {
     width: 100%;
     height: var(--slider-track-height);
     cursor: pointer;
     background: var(--slider-track-background-off);
+    /* Unfilled part */
     border-radius: var(--border-radius-full);
     border: none;
 }
@@ -519,6 +519,7 @@ prompt-controller[filtered] .prompt-text-input {
 .weight-slider::-moz-range-progress {
     height: var(--slider-track-height);
     background-color: var(--slider-thumb-color, var(--md-sys-color-primary));
+    /* Filled part */
     border-radius: var(--border-radius-full);
     border: none;
 }
@@ -532,6 +533,7 @@ prompt-controller[filtered] .prompt-text-input {
     cursor: pointer;
     box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
     transition: transform 0.1s ease-out;
+    /* Firefox usually centers thumbs well on their tracks by default */
 }
 
 .weight-slider::-moz-range-thumb:hover {
