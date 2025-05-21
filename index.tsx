@@ -318,8 +318,7 @@ class PromptDjController extends LitElement {
 
   private async loadAndInitializePrompts() {
     try {
-      const response = `
-      
+      const jsonString = `
       [
         { "color": "#D0BCFF", "text": "Bossa Nova" },
         { "color": "#A8C7FA", "text": "Chillwave" },
@@ -338,15 +337,15 @@ class PromptDjController extends LitElement {
         { "color": "#B0BEC5", "text": "Trip Hop" },
         { "color": "#EF9A9A", "text": "Thrash" }
       ]
-
-      `
-      LOADED_DEFAULT_PROMPTS = response;
+      `;
+      LOADED_DEFAULT_PROMPTS = JSON.parse(jsonString);
+      
       this.prompts = getInitialPrompts();
-      this.requestUpdate();
+      this.requestUpdate(); // Ensure Lit re-renders if needed
     } catch (error) {
       console.error("Could not load default prompts:", error);
-      LOADED_DEFAULT_PROMPTS = []; // Fallback to empty
-      this.prompts = getInitialPrompts(); // This will now use empty LOADED_DEFAULT_PROMPTS
+      LOADED_DEFAULT_PROMPTS = []; // Fallback to empty array
+      this.prompts = getInitialPrompts(); 
       this.toastMessage?.show("Error loading default prompts. Using fallback.", 5000);
     }
   }
