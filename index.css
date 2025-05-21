@@ -426,12 +426,19 @@ prompt-controller[filtered] .prompt-text-input {
     appearance: none;
     width: 100%;
     height: 6px;
+    /* Track height */
     background: var(--md-sys-color-outline);
     border-radius: var(--border-radius-full);
     outline: none;
     cursor: pointer;
     margin: 0;
-    /* Removed vertical margin, container handles spacing */
+    /* Container handles spacing */
+    padding: 0;
+    /* Ensure no extra padding affects track position */
+    display: block;
+    /* Ensure it behaves as a block for consistent layout */
+    position: relative;
+    /* For potential pseudo-elements if needed, though not used for thumb here */
 }
 
 .slider-track-fill {
@@ -448,51 +455,92 @@ prompt-controller[filtered] .prompt-text-input {
 
 .weight-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
+    /* Essential */
     appearance: none;
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    /* Diameter of the circle */
+    height: 20px;
+    /* Diameter of the circle */
     background: var(--slider-thumb-color, var(--md-sys-color-primary));
+    border-radius: 50%;
+    /* Makes it a circle */
     border: 2px solid var(--md-sys-color-surface);
+    /* Card's surface color */
     cursor: pointer;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-    transition: transform 0.1s ease-out;
-    margin-top: -6px;
-    border-radius: 12px;
-    /* Center thumb vertically on track */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    /* Subtle shadow */
+    transition: transform 0.1s ease-out, box-shadow 0.1s ease-out;
+    /* Centering: WebKit thumbs are vertically centered on the track by default
+       IF the track has a defined height and the thumb also has a defined height.
+       No explicit margin-top should be needed if track height (6px) and thumb height (20px)
+       are correctly interpreted. */
+    margin-top: -7px;
+    /* (thumb_height - track_height) / 2 negated. (20px - 6px) / 2 = 7px. */
+    /* This is often needed because the thumb is drawn *over* the track. */
 }
 
 .weight-slider::-webkit-slider-thumb:hover {
     transform: scale(1.1);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
 }
 
+.weight-slider::-webkit-slider-thumb:active {
+    transform: scale(1.05);
+    background-color: var(--slider-thumb-color-active, var(--md-sys-color-primary));
+    /* Could darken slightly on active */
+}
+
+
+/* Mozilla Firefox */
 .weight-slider::-moz-range-thumb {
-    width: 16px;
-    /* Adjusted for consistent appearance */
-    height: 16px;
-    /* Adjusted for consistent appearance */
+    width: 20px;
+    /* Diameter of the circle */
+    height: 20px;
+    /* Diameter of the circle */
     background: var(--slider-thumb-color, var(--md-sys-color-primary));
     border-radius: 50%;
+    /* Makes it a circle */
     border: 2px solid var(--md-sys-color-surface);
     cursor: pointer;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    transition: transform 0.1s ease-out, box-shadow 0.1s ease-out;
+    /* Firefox generally centers its thumb well by default on the track */
 }
 
 .weight-slider::-moz-range-thumb:hover {
     transform: scale(1.1);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
 }
 
+.weight-slider::-moz-range-thumb:active {
+    transform: scale(1.05);
+    background-color: var(--slider-thumb-color-active, var(--md-sys-color-primary));
+}
+
+/* Microsoft Edge (Legacy - for older Edge, Chromium Edge uses -webkit- ) */
+/* Modern Edge uses -webkit- styles, but this is for completeness if targeting older versions */
 .weight-slider::-ms-thumb {
     width: 20px;
+    /* Diameter of the circle */
     height: 20px;
+    /* Diameter of the circle */
     background: var(--slider-thumb-color, var(--md-sys-color-primary));
     border-radius: 50%;
+    /* Makes it a circle */
     border: 2px solid var(--md-sys-color-surface);
     cursor: pointer;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-    transition: transform 0.1s ease-out;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    transition: transform 0.1s ease-out, box-shadow 0.1s ease-out;
+    margin-top: 0;
+    /* Edge usually handles centering well too if track height is set */
 }
 
 .weight-slider::-ms-thumb:hover {
     transform: scale(1.1);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+}
+
+.weight-slider::-ms-thumb:active {
+    transform: scale(1.05);
+    background-color: var(--slider-thumb-color-active, var(--md-sys-color-primary));
 }
