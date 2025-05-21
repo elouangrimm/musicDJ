@@ -1,0 +1,458 @@
+/* index.css */
+:root {
+    --md-sys-color-primary: #6750A4;
+    /* Default Purple */
+    --md-sys-color-on-primary: #FFFFFF;
+    --md-sys-color-primary-container: #EADDFF;
+    --md-sys-color-on-primary-container: #21005D;
+    --md-sys-color-secondary: #625B71;
+    --md-sys-color-on-secondary: #FFFFFF;
+    --md-sys-color-secondary-container: #E8DEF8;
+    --md-sys-color-on-secondary-container: #1D192B;
+    --md-sys-color-tertiary: #7D5260;
+    --md-sys-color-on-tertiary: #FFFFFF;
+    --md-sys-color-tertiary-container: #FFD8E4;
+    --md-sys-color-on-tertiary-container: #31111D;
+    --md-sys-color-error: #B3261E;
+    --md-sys-color-on-error: #FFFFFF;
+    --md-sys-color-error-container: #F9DEDC;
+    --md-sys-color-on-error-container: #410E0B;
+    --md-sys-color-background: #FFFBFE;
+    /* Light background */
+    --md-sys-color-on-background: #1C1B1F;
+    --md-sys-color-surface: #FFFBFE;
+    --md-sys-color-on-surface: #1C1B1F;
+    --md-sys-color-surface-variant: #E7E0EC;
+    --md-sys-color-on-surface-variant: #49454F;
+    --md-sys-color-outline: #79747E;
+    --md-sys-color-shadow: #000000;
+    --md-sys-color-inverse-surface: #313033;
+    --md-sys-color-inverse-on-surface: #F4EFF4;
+    --md-sys-color-inverse-primary: #D0BCFF;
+
+    /* Dark Theme (Optional - can be toggled with a class on body) */
+    /*
+    --md-sys-color-primary-dark: #D0BCFF;
+    --md-sys-color-on-primary-dark: #381E72;
+    --md-sys-color-background-dark: #1C1B1F;
+    --md-sys-color-on-background-dark: #E6E1E5;
+    --md-sys-color-surface-dark: #1C1B1F;
+    --md-sys-color-on-surface-dark: #E6E1E5;
+    --md-sys-color-surface-variant-dark: #49454F;
+    --md-sys-color-on-surface-variant-dark: #CAC4D0;
+    --md-sys-color-outline-dark: #938F99;
+    */
+
+    --border-radius-small: 4px;
+    --border-radius-medium: 8px;
+    --border-radius-large: 16px;
+    --border-radius-extra-large: 28px;
+    --border-radius-full: 999px;
+
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    margin: 0;
+    font-family: 'Roboto', sans-serif;
+    background-color: var(--md-sys-color-background);
+    color: var(--md-sys-color-on-background);
+    display: flex;
+    /* Needed for main to take up space */
+    flex-direction: column;
+    /* Needed for main to take up space */
+    min-height: 100vh;
+    /* Full height */
+    overflow-x: hidden;
+}
+
+/* --- App Layout --- */
+.app-layout {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.app-header {
+    background-color: var(--md-sys-color-surface-variant);
+    /* Slightly different surface */
+    color: var(--md-sys-color-on-surface-variant);
+    padding: 16px 24px;
+    box-shadow: 0 2px 4px rgba(var(--md-sys-color-shadow), 0.1);
+    text-align: center;
+}
+
+.app-header h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    /* 24px */
+    font-weight: 500;
+}
+
+.app-main-content {
+    flex-grow: 1;
+    padding: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    /* Align grid to top */
+}
+
+#background-layer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -2;
+    /* Behind everything */
+    background: var(--md-sys-color-background);
+    /* Fallback */
+    transition: background-image 0.5s ease-out;
+    opacity: 0.7;
+    /* Make background more subtle */
+}
+
+
+#prompt-grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    /* Responsive columns */
+    gap: 20px;
+    width: 100%;
+    max-width: 1200px;
+    /* Max width for the grid */
+}
+
+.app-footer {
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--md-sys-color-surface-variant);
+    border-top: 1px solid var(--md-sys-color-outline);
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+}
+
+/* --- Toast Message --- */
+.toast-container {
+    position: fixed;
+    bottom: 20px;
+    /* Changed from top to bottom */
+    left: 50%;
+    transform: translateX(-50%) translateY(150%);
+    /* Start off-screen below */
+    background-color: var(--md-sys-color-inverse-surface);
+    color: var(--md-sys-color-inverse-on-surface);
+    padding: 12px 18px;
+    border-radius: var(--border-radius-medium);
+    box-shadow: 0 4px 8px rgba(var(--md-sys-color-shadow), 0.2);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 280px;
+    max-width: 80vw;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1000;
+    font-size: 0.875rem;
+    /* 14px */
+}
+
+.toast-container.showing {
+    transform: translateX(-50%) translateY(0);
+}
+
+.toast-message-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.toast-text {
+    flex-grow: 1;
+    line-height: 1.4;
+}
+
+.toast-close-button {
+    background: none;
+    border: none;
+    color: var(--md-sys-color-inverse-on-surface);
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--border-radius-full);
+    margin-left: 8px;
+}
+
+.toast-close-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.toast-close-button .material-symbols-outlined {
+    font-size: 1.25rem;
+    /* 20px */
+}
+
+
+/* --- Play/Pause Button --- */
+play-pause-button .icon-button {
+    /* Target the button inside play-pause-button */
+    background-color: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+    border: none;
+    width: 64px;
+    height: 64px;
+    border-radius: var(--border-radius-extra-large);
+    /* More Material You like */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(var(--md-sys-color-shadow), 0.2);
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s;
+    outline-offset: 2px;
+}
+
+play-pause-button .icon-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 10px rgba(var(--md-sys-color-shadow), 0.25);
+}
+
+play-pause-button .icon-button:active {
+    transform: scale(0.98);
+}
+
+play-pause-button .icon-button svg {
+    width: 32px;
+    /* Larger icon */
+    height: 32px;
+    fill: currentColor;
+}
+
+/* Loader specific styles for PlayPauseButton */
+play-pause-button .loader-svg {
+    animation: spin 1s linear infinite;
+    transform-origin: center;
+}
+
+play-pause-button .loader-bg {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    opacity: 0.3;
+}
+
+play-pause-button .loader-fg {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-dasharray: 60;
+    /* Adjust for desired arc length */
+    stroke-dashoffset: 45;
+    /* Adjust for desired start position */
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+
+/* --- Prompt Controller Card --- */
+prompt-controller {
+    /* This is the custom element itself */
+    display: block;
+    /* Important for layout */
+}
+
+.prompt-card {
+    background-color: var(--md-sys-color-surface-variant);
+    color: var(--md-sys-color-on-surface-variant);
+    border-radius: var(--border-radius-large);
+    /* Softer corners */
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+    /* For halo positioning */
+    overflow: hidden;
+    /* For halo clipping */
+    box-shadow: 0 1px 3px rgba(var(--md-sys-color-shadow), 0.1);
+    transition: box-shadow 0.2s ease-in-out;
+}
+
+.prompt-card:hover {
+    box-shadow: 0 4px 8px rgba(var(--md-sys-color-shadow), 0.15);
+}
+
+.prompt-halo {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 200%;
+    /* Large enough to create a glow effect */
+    height: 200%;
+    border-radius: 50%;
+    background-color: var(--prompt-halo-color, var(--md-sys-color-primary));
+    /* Fallback */
+    transform: translate(-50%, -50%) scale(0.8);
+    /* Start smaller */
+    pointer-events: none;
+    z-index: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    opacity: 0;
+    /* Default hidden, controlled by inline style */
+}
+
+.prompt-text-input {
+    font-size: 1rem;
+    /* 16px */
+    font-weight: 500;
+    padding: 8px 12px;
+    border-radius: var(--border-radius-medium);
+    background-color: var(--md-sys-color-surface);
+    /* Inner input field */
+    color: var(--md-sys-color-on-surface);
+    border: 1px solid var(--md-sys-color-outline);
+    text-align: center;
+    outline: none;
+    width: calc(100% - 24px);
+    /* Full width minus padding */
+    box-sizing: border-box;
+    z-index: 1;
+    /* Above halo */
+    transition: border-color 0.2s;
+    min-height: 2.5em;
+    /* Ensure it has some height */
+    display: inline-block;
+    /* For contenteditable to behave */
+    line-height: 1.5;
+}
+
+.prompt-text-input:focus {
+    border-color: var(--slider-thumb-color, var(--md-sys-color-primary));
+    /* Use dynamic color */
+    box-shadow: 0 0 0 2px var(--slider-thumb-color-focus, var(--md-sys-color-primary-container));
+}
+
+/* Filtered prompt style */
+prompt-controller[filtered] .prompt-card {
+    border: 2px solid var(--md-sys-color-error);
+}
+
+prompt-controller[filtered] .prompt-text-input {
+    background-color: var(--md-sys-color-error-container);
+    color: var(--md-sys-color-on-error-container);
+    border-color: var(--md-sys-color-error);
+}
+
+
+.slider-container {
+    width: 100%;
+    position: relative;
+    z-index: 1;
+    /* Above halo */
+    height: 24px;
+    /* Give space for thumb and track */
+    display: flex;
+    align-items: center;
+}
+
+.weight-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 4px;
+    /* Track height */
+    background: var(--md-sys-color-surface-variant);
+    /* Track background */
+    border-radius: var(--border-radius-full);
+    outline: none;
+    cursor: pointer;
+    margin: 10px 0;
+    /* Vertical margin for thumb overflow */
+}
+
+/* Custom track fill (visual only, slider value controls actual fill) */
+.slider-track-fill {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 4px;
+    background-color: var(--slider-thumb-color, var(--md-sys-color-primary));
+    /* Dynamic color */
+    border-radius: var(--border-radius-full);
+    pointer-events: none;
+    /* Doesn't interfere with slider interaction */
+    z-index: -1;
+    /* Behind the actual slider thumb */
+}
+
+
+.weight-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    /* Thumb size */
+    height: 20px;
+    background: var(--slider-thumb-color, var(--md-sys-color-primary));
+    /* Dynamic color */
+    border-radius: 50%;
+    border: 2px solid var(--md-sys-color-surface);
+    /* Border for contrast */
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    transition: transform 0.1s ease-out;
+}
+
+.weight-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
+}
+
+.weight-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: var(--slider-thumb-color, var(--md-sys-color-primary));
+    border-radius: 50%;
+    border: 2px solid var(--md-sys-color-surface);
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    transition: transform 0.1s ease-out;
+}
+
+.weight-slider::-moz-range-thumb:hover {
+    transform: scale(1.1);
+}
+
+.weight-slider::-ms-thumb {
+    width: 20px;
+    height: 20px;
+    background: var(--slider-thumb-color, var(--md-sys-color-primary));
+    border-radius: 50%;
+    border: 2px solid var(--md-sys-color-surface);
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    transition: transform 0.1s ease-out;
+}
+
+.weight-slider::-ms-thumb:hover {
+    transform: scale(1.1);
+}
