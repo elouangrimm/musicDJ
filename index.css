@@ -3,7 +3,8 @@
     /* Dark Theme Values */
     --md-sys-color-primary: #D0BCFF;
     --md-sys-color-on-primary: #381E72;
-    --md-sys-color-primary-container: #4A4458; /* Adjusted for dark */
+    --md-sys-color-primary-container: #4A4458;
+    /* Adjusted for dark */
     --md-sys-color-on-primary-container: #EADDFF;
     --md-sys-color-secondary: #CCC2DC;
     --md-sys-color-on-secondary: #332D41;
@@ -17,17 +18,24 @@
     --md-sys-color-on-error: #601410;
     --md-sys-color-error-container: #8C1D18;
     --md-sys-color-on-error-container: #F9DEDC;
-    --md-sys-color-background: #1C1B1F; /* Dark background */
+    --md-sys-color-background: #1C1B1F;
+    /* Dark background */
     --md-sys-color-on-background: #E6E1E5;
-    --md-sys-color-surface: #1C1B1F; /* Can be same as background or slightly different */
+    --md-sys-color-surface: #1C1B1F;
+    /* Can be same as background or slightly different */
     --md-sys-color-on-surface: #E6E1E5;
-    --md-sys-color-surface-variant: #49454F; /* Darker surface variant */
+    --md-sys-color-surface-variant: #49454F;
+    /* Darker surface variant */
     --md-sys-color-on-surface-variant: #CAC4D0;
     --md-sys-color-outline: #938F99;
-    --md-sys-color-shadow: #000000; /* Shadow is usually black, its opacity is what matters */
-    --md-sys-color-inverse-surface: #E6E1E5; /* Light for inverse elements */
-    --md-sys-color-inverse-on-surface: #313033; /* Dark text on light inverse */
-    --md-sys-color-inverse-primary: #6750A4; /* Original primary for inverse contexts */
+    --md-sys-color-shadow: #000000;
+    /* Shadow is usually black, its opacity is what matters */
+    --md-sys-color-inverse-surface: #E6E1E5;
+    /* Light for inverse elements */
+    --md-sys-color-inverse-on-surface: #313033;
+    /* Dark text on light inverse */
+    --md-sys-color-inverse-primary: #6750A4;
+    /* Original primary for inverse contexts */
 
     --border-radius-small: 4px;
     --border-radius-medium: 8px;
@@ -48,44 +56,57 @@ body {
     background-color: var(--md-sys-color-background);
     color: var(--md-sys-color-on-background);
     display: flex;
-    /* Needed for main to take up space */
+    /* Changed from flex to ensure .app-layout is the direct child controlling height */
     flex-direction: column;
-    /* Needed for main to take up space */
-    min-height: 100vh;
-    /* Full height */
-    overflow-x: hidden;
+    height: 100vh;
+    /* Full viewport height */
+    overflow: hidden;
+    /* Prevent body scrolling */
 }
 
 /* --- App Layout --- */
 .app-layout {
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
+    flex-grow: 1;
+    /* Allow .app-layout to grow and fill body */
+    height: 100%;
+    /* Take full height of parent (body) */
+    overflow: hidden;
+    /* Prevent .app-layout from scrolling if children overflow unexpectedly */
 }
 
 .app-header {
     background-color: var(--md-sys-color-surface-variant);
-    /* Slightly different surface */
     color: var(--md-sys-color-on-surface-variant);
-    padding: 16px 24px;
-    box-shadow: 0 2px 4px rgba(var(--md-sys-color-shadow), 0.1);
+    padding: 12px 24px;
+    /* Reduced padding slightly */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    /* Adjusted shadow for dark mode */
     text-align: center;
+    flex-shrink: 0;
+    /* Prevent header from shrinking */
 }
 
 .app-header h1 {
     margin: 0;
-    font-size: 1.5rem;
-    /* 24px */
+    font-size: 1.25rem;
+    /* Reduced font size slightly */
     font-weight: 500;
 }
 
 .app-main-content {
     flex-grow: 1;
-    padding: 24px;
+    /* This will take up the remaining vertical space */
+    padding: 16px;
+    /* Reduced padding */
     display: flex;
+    /* Use flex to center the grid */
     justify-content: center;
-    align-items: flex-start;
-    /* Align grid to top */
+    align-items: center;
+    /* Center the grid vertically and horizontally */
+    overflow: hidden;
+    /* Prevent this section from causing scroll if grid is too big */
 }
 
 #background-layer {
@@ -99,35 +120,42 @@ body {
     background: var(--md-sys-color-background);
     /* Fallback */
     transition: background-image 0.5s ease-out;
-    opacity: 0.7;
+    opacity: 0.5;
     /* Make background more subtle */
 }
 
 
 #prompt-grid-container {
     display: grid;
-    /* grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); */ /* Old responsive columns */
-    /* NEW for 4x4 */
-    grid-template-columns: repeat(4, 1fr); /* Always 4 columns */
-    grid-template-rows: repeat(4, 1fr);    /* Attempt for 4 rows, height will be content-based */
-    gap: 20px;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    /* Explicitly define 4 rows */
+    gap: 12px;
+    /* Reduced gap */
     width: 100%;
-    max-width: 90vmin; /* Max width for the grid, relative to viewport smaller dimension */
-    max-height: 90vmin; /* Max height for the grid */
-    aspect-ratio: 1 / 1; /* Maintain a square aspect ratio */
-    margin: auto; /* Center the grid if space allows */
+    /* Take full width of parent (.app-main-content) */
+    height: 100%;
+    /* Take full height of parent (.app-main-content) */
+    /* max-width: 90vmin;  -- Remove explicit max-width/height using vmin */
+    /* max-height: 90vmin; -- Remove */
+    /* aspect-ratio: 1 / 1; -- May not be needed if width/height are 100% of a flexible container */
+    /* Ensure grid items don't overflow their container, which is now flex-sized */
+    box-sizing: border-box;
 }
 
 .app-footer {
-    padding: 20px;
+    padding: 12px 20px;
+    /* Reduced padding */
     display: flex;
     justify-content: center;
     align-items: center;
     background-color: var(--md-sys-color-surface-variant);
     border-top: 1px solid var(--md-sys-color-outline);
-    position: sticky;
-    bottom: 0;
+    /* position: sticky; -- Not needed if .app-layout is flex column with fixed header/footer */
+    /* bottom: 0; */
     z-index: 10;
+    flex-shrink: 0;
+    /* Prevent footer from shrinking */
 }
 
 .toast-container {
@@ -282,31 +310,32 @@ play-pause-button .loader-fg {
 
 
 prompt-controller {
-    display: flex; /* Use flex to make internal content fill */
-    width: 100%;
-    height: 100%;
+    display: flex;
+    /* Use flex to make internal content fill */
 }
 
 .prompt-card {
-    background-color: var(--md-sys-color-surface-variant);
-    color: var(--md-sys-color-on-surface-variant);
+    background-color: var(--md-sys-color-surface);
+    /* Changed from surface-variant for more contrast */
+    color: var(--md-sys-color-on-surface);
     border-radius: var(--border-radius-large);
-    /* Softer corners */
-    padding: 16px;
+    padding: 12px;
+    /* Reduced padding */
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 12px;
+    justify-content: space-around;
+    /* Better distribution for text and slider */
+    gap: 8px;
+    /* Reduced gap */
     position: relative;
-    /* For halo positioning */
     overflow: hidden;
-    /* For halo clipping */
-    box-shadow: 0 1px 3px rgba(var(--md-sys-color-shadow), 0.1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    /* Slightly stronger shadow for dark mode */
     transition: box-shadow 0.2s ease-in-out;
-    width: 100%; /* Ensure card takes full width of grid cell */
-    height: 100%; /* Ensure card takes full height of grid cell */
-    box-sizing: border-box; /* Include padding and border in the element's total width and height */
-    justify-content: space-between; /* Distribute space for text and slider */
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
 }
 
 .prompt-card:hover {
@@ -333,14 +362,12 @@ prompt-controller {
 }
 
 .prompt-text-input {
-    font-size: 1rem;
-    /* 16px */
+    font-size: 0.875rem; /* 14px, adjust as needed for space */
     font-weight: 500;
-    padding: 8px 12px;
+    padding: 6px 10px; /* Reduced padding */
     border-radius: var(--border-radius-medium);
-    background-color: var(--md-sys-color-surface);
-    /* Inner input field */
-    color: var(--md-sys-color-on-surface);
+    background-color: var(--md-sys-color-surface-variant); /* Contrast with card surface */
+    color: var(--md-sys-color-on-surface-variant);
     border: 1px solid var(--md-sys-color-outline);
     text-align: center;
     outline: none;
@@ -350,11 +377,11 @@ prompt-controller {
     z-index: 1;
     /* Above halo */
     transition: border-color 0.2s;
-    min-height: 2.5em;
+    min-height: auto;
     /* Ensure it has some height */
     display: inline-block;
     /* For contenteditable to behave */
-    line-height: 1.5;
+    line-height: 1.4;
 }
 
 .prompt-text-input:focus {
@@ -379,9 +406,7 @@ prompt-controller[filtered] .prompt-text-input {
     width: 100%;
     position: relative;
     z-index: 1;
-    /* Above halo */
-    height: 24px;
-    /* Give space for thumb and track */
+    height: 20px; /* Reduced height */
     display: flex;
     align-items: center;
 }
@@ -390,9 +415,9 @@ prompt-controller[filtered] .prompt-text-input {
     -webkit-appearance: none;
     appearance: none;
     width: 100%;
-    height: 4px;
+    height: 6px;
     /* Track height */
-    background: var(--md-sys-color-surface-variant);
+    background: var(--md-sys-color-outline);
     /* Track background */
     border-radius: var(--border-radius-full);
     outline: none;
@@ -407,7 +432,7 @@ prompt-controller[filtered] .prompt-text-input {
     left: 0;
     top: 50%;
     transform: translateY(-50%);
-    height: 4px;
+    height: 6px;
     background-color: var(--slider-thumb-color, var(--md-sys-color-primary));
     /* Dynamic color */
     border-radius: var(--border-radius-full);
@@ -421,9 +446,9 @@ prompt-controller[filtered] .prompt-text-input {
 .weight-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 20px;
+    width: 18px;
     /* Thumb size */
-    height: 20px;
+    height: 18px;
     background: var(--slider-thumb-color, var(--md-sys-color-primary));
     /* Dynamic color */
     border-radius: 50%;
@@ -439,8 +464,8 @@ prompt-controller[filtered] .prompt-text-input {
 }
 
 .weight-slider::-moz-range-thumb {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     background: var(--slider-thumb-color, var(--md-sys-color-primary));
     border-radius: 50%;
     border: 2px solid var(--md-sys-color-surface);
