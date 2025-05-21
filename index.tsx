@@ -648,7 +648,17 @@ class PromptDjController extends LitElement {
 
   override render() {
     if (!this.promptsLoaded) {
-        return html`<div class="loading-prompts">Loading Prompts...</div>`;
+        const loadingStyle = `
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          width: 100%;
+          height: 100vh; /* Make the loading div itself take full viewport height */
+          text-align: center;
+          font-size: 1.2rem;
+          color: var(--md-sys-color-on-background); 
+      `;
+      return html`<div class="loading-prompts" style="${loadingStyle}">Loading...</div>`;
     }
     const backgroundStyle = styleMap({
       backgroundImage: this.makeBackground(),
