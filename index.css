@@ -1,10 +1,7 @@
-/* index.css */
 :root {
-    /* Dark Theme Values */
     --md-sys-color-primary: #D0BCFF;
     --md-sys-color-on-primary: #381E72;
     --md-sys-color-primary-container: #4A4458;
-    /* Adjusted for dark */
     --md-sys-color-on-primary-container: #EADDFF;
     --md-sys-color-secondary: #CCC2DC;
     --md-sys-color-on-secondary: #332D41;
@@ -19,29 +16,25 @@
     --md-sys-color-error-container: #8C1D18;
     --md-sys-color-on-error-container: #F9DEDC;
     --md-sys-color-background: #1C1B1F;
-    /* Dark background */
     --md-sys-color-on-background: #E6E1E5;
     --md-sys-color-surface: #1C1B1F;
-    /* Can be same as background or slightly different */
     --md-sys-color-on-surface: #E6E1E5;
     --md-sys-color-surface-variant: #49454F;
-    /* Darker surface variant */
     --md-sys-color-on-surface-variant: #CAC4D0;
     --md-sys-color-outline: #938F99;
     --md-sys-color-shadow: #000000;
-    /* Shadow is usually black, its opacity is what matters */
     --md-sys-color-inverse-surface: #E6E1E5;
-    /* Light for inverse elements */
     --md-sys-color-inverse-on-surface: #313033;
-    /* Dark text on light inverse */
     --md-sys-color-inverse-primary: #6750A4;
-    /* Original primary for inverse contexts */
 
     --border-radius-small: 4px;
     --border-radius-medium: 8px;
     --border-radius-large: 16px;
     --border-radius-extra-large: 28px;
     --border-radius-full: 999px;
+
+    --footer-height: 80px;
+    --header-height: 60px;
 
     font-synthesis: none;
     text-rendering: optimizeLegibility;
@@ -56,57 +49,56 @@ body {
     background-color: var(--md-sys-color-background);
     color: var(--md-sys-color-on-background);
     display: flex;
-    /* Changed from flex to ensure .app-layout is the direct child controlling height */
     flex-direction: column;
     height: 100vh;
-    /* Full viewport height */
     overflow: hidden;
     /* Prevent body scrolling */
 }
 
-/* --- App Layout --- */
 .app-layout {
     display: flex;
     flex-direction: column;
-    flex-grow: 1;
-    /* Allow .app-layout to grow and fill body */
     height: 100%;
-    /* Take full height of parent (body) */
-    overflow: hidden;
-    /* Prevent .app-layout from scrolling if children overflow unexpectedly */
+    /* Occupy full body height */
+    position: relative;
+    /* For positioning footer */
 }
 
 .app-header {
     background-color: var(--md-sys-color-surface-variant);
     color: var(--md-sys-color-on-surface-variant);
     padding: 12px 24px;
-    /* Reduced padding slightly */
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    /* Adjusted shadow for dark mode */
     text-align: center;
     flex-shrink: 0;
-    /* Prevent header from shrinking */
+    height: var(--header-height);
+    box-sizing: border-box;
+    z-index: 10;
+    /* Keep header above background */
 }
 
 .app-header h1 {
     margin: 0;
     font-size: 1.25rem;
-    /* Reduced font size slightly */
     font-weight: 500;
+    line-height: calc(var(--header-height) - 24px);
+    /* Center text vertically */
 }
 
 .app-main-content {
     flex-grow: 1;
-    /* This will take up the remaining vertical space */
+    /* Takes up space between header and footer */
+    /* Calculate available height for content, considering header and footer */
+    height: calc(100vh - var(--header-height) - var(--footer-height));
     padding: 16px;
-    /* Reduced padding */
     display: flex;
-    /* Use flex to center the grid */
     justify-content: center;
+    /* Center grid horizontally */
     align-items: center;
-    /* Center the grid vertically and horizontally */
+    /* Center grid vertically */
     overflow: hidden;
-    /* Prevent this section from causing scroll if grid is too big */
+    /* Important: prevents this section from scrolling, grid will handle its own scroll if needed */
+    box-sizing: border-box;
 }
 
 #background-layer {
@@ -116,46 +108,53 @@ body {
     width: 100%;
     height: 100%;
     z-index: -2;
-    /* Behind everything */
     background: var(--md-sys-color-background);
-    /* Fallback */
     transition: background-image 0.5s ease-out;
     opacity: 0.5;
-    /* Make background more subtle */
 }
-
 
 #prompt-grid-container {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    grid-template-rows: repeat(4, 1fr);
-    /* Explicitly define 4 rows */
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    /* Ensure 4 columns, allow shrinking */
+    /* grid-template-rows: repeat(4, 1fr); -- Let content and aspect-ratio define row height */
     gap: 12px;
-    /* Reduced gap */
-    width: 100%;
-    /* Take full width of parent (.app-main-content) */
-    height: 100%;
-    /* Take full height of parent (.app-main-content) */
-    /* max-width: 90vmin;  -- Remove explicit max-width/height using vmin */
-    /* max-height: 90vmin; -- Remove */
-    /* aspect-ratio: 1 / 1; -- May not be needed if width/height are 100% of a flexible container */
-    /* Ensure grid items don't overflow their container, which is now flex-sized */
+
+    /* Sizing the grid to fit within app-main-content and maintain square cells */
+    /* Maximize size while respecting parent constraints and cell aspect ratio */
+    max-width: 100%;
+    max-height: 100%;
+    /* We want the *cells* to be square, not necessarily the whole grid container if it needs to scroll */
+    /* The aspect ratio of cells will be handled by prompt-controller styles */
+    overflow-x: auto;
+    /* Allow horizontal scroll if needed */
+    overflow-y: hidden;
+    /* Generally, vertical scroll should be avoided for the grid itself */
+    padding: 4px;
+    /* Small padding for scrollbar aesthetics if it appears */
     box-sizing: border-box;
 }
 
 .app-footer {
-    padding: 12px 20px;
-    /* Reduced padding */
+    height: var(--footer-height);
+    box-sizing: border-box;
+    padding: 0 20px;
+    /* Adjust padding for content centering */
     display: flex;
     justify-content: center;
     align-items: center;
     background-color: var(--md-sys-color-surface-variant);
     border-top: 1px solid var(--md-sys-color-outline);
-    /* position: sticky; -- Not needed if .app-layout is flex column with fixed header/footer */
-    /* bottom: 0; */
-    z-index: 10;
+    width: 100%;
+    /* Full width */
+    position: fixed;
+    /* Fixed positioning */
+    bottom: 0;
+    /* Stick to bottom */
+    left: 0;
+    z-index: 20;
+    /* Above other content */
     flex-shrink: 0;
-    /* Prevent footer from shrinking */
 }
 
 .toast-container {
@@ -245,8 +244,8 @@ play-pause-button .icon-button {
     background-color: var(--md-sys-color-primary);
     color: var(--md-sys-color-on-primary);
     border: none;
-    width: 64px;
-    height: 64px;
+    width: 56px;
+    height: 56px;
     border-radius: var(--border-radius-extra-large);
     /* More Material You like */
     display: flex;
@@ -268,9 +267,9 @@ play-pause-button .icon-button:active {
 }
 
 play-pause-button .icon-button svg {
-    width: 32px;
+    width: 28px;
     /* Larger icon */
-    height: 32px;
+    height: 28px;
     fill: currentColor;
 }
 
@@ -311,30 +310,34 @@ play-pause-button .loader-fg {
 
 prompt-controller {
     display: flex;
-    /* Use flex to make internal content fill */
+    /* To help prompt-card fill the grid cell */
+    aspect-ratio: 1 / 1;
+    /* MAKE PROMPT CONTROLLER (THE GRID ITEM) SQUARE */
+    min-width: 100px;
+    /* Minimum sensible size for a prompt controller */
+    min-height: 100px;
 }
 
 .prompt-card {
     background-color: var(--md-sys-color-surface);
-    /* Changed from surface-variant for more contrast */
     color: var(--md-sys-color-on-surface);
     border-radius: var(--border-radius-large);
-    padding: 12px;
-    /* Reduced padding */
+    padding: 10px;
+    /* Adjusted padding for potentially smaller cells */
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: space-around;
-    /* Better distribution for text and slider */
+    justify-content: space-between;
+    /* Distribute text and slider */
     gap: 8px;
-    /* Reduced gap */
     position: relative;
     overflow: hidden;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-    /* Slightly stronger shadow for dark mode */
     transition: box-shadow 0.2s ease-in-out;
     width: 100%;
+    /* Fill the square prompt-controller */
     height: 100%;
+    /* Fill the square prompt-controller */
     box-sizing: border-box;
 }
 
@@ -362,26 +365,30 @@ prompt-controller {
 }
 
 .prompt-text-input {
-    font-size: 0.875rem; /* 14px, adjust as needed for space */
+    font-size: calc(0.6em + 0.5vmin);
+    /* Responsive font size based on viewport, adjust base and factor */
     font-weight: 500;
-    padding: 6px 10px; /* Reduced padding */
+    padding: 6px 8px;
     border-radius: var(--border-radius-medium);
-    background-color: var(--md-sys-color-surface-variant); /* Contrast with card surface */
+    background-color: var(--md-sys-color-surface-variant);
     color: var(--md-sys-color-on-surface-variant);
     border: 1px solid var(--md-sys-color-outline);
     text-align: center;
     outline: none;
-    width: calc(100% - 24px);
-    /* Full width minus padding */
+    width: calc(100% - 16px);
+    /* Adjusted width */
     box-sizing: border-box;
     z-index: 1;
-    /* Above halo */
     transition: border-color 0.2s;
-    min-height: auto;
-    /* Ensure it has some height */
-    display: inline-block;
-    /* For contenteditable to behave */
-    line-height: 1.4;
+    line-height: 1.3;
+    overflow: hidden;
+    /* Prevent text from making card bigger */
+    text-overflow: ellipsis;
+    /* Show ... if text is too long */
+    white-space: nowrap;
+    /* Keep text on one line for simplicity */
+    max-height: 2.8em;
+    /* Limit height of text input for very small cards */
 }
 
 .prompt-text-input:focus {
@@ -406,9 +413,12 @@ prompt-controller[filtered] .prompt-text-input {
     width: 100%;
     position: relative;
     z-index: 1;
-    height: 20px; /* Reduced height */
+    height: 18px;
+    /* Adjusted height */
     display: flex;
     align-items: center;
+    margin-top: auto;
+    /* Push slider towards bottom if space available */
 }
 
 .weight-slider {
@@ -416,17 +426,14 @@ prompt-controller[filtered] .prompt-text-input {
     appearance: none;
     width: 100%;
     height: 6px;
-    /* Track height */
     background: var(--md-sys-color-outline);
-    /* Track background */
     border-radius: var(--border-radius-full);
     outline: none;
     cursor: pointer;
-    margin: 10px 0;
-    /* Vertical margin for thumb overflow */
+    margin: 0;
+    /* Removed vertical margin, container handles spacing */
 }
 
-/* Custom track fill (visual only, slider value controls actual fill) */
 .slider-track-fill {
     position: absolute;
     left: 0;
@@ -434,29 +441,23 @@ prompt-controller[filtered] .prompt-text-input {
     transform: translateY(-50%);
     height: 6px;
     background-color: var(--slider-thumb-color, var(--md-sys-color-primary));
-    /* Dynamic color */
     border-radius: var(--border-radius-full);
     pointer-events: none;
-    /* Doesn't interfere with slider interaction */
     z-index: -1;
-    /* Behind the actual slider thumb */
 }
-
 
 .weight-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
     width: 18px;
-    /* Thumb size */
     height: 18px;
     background: var(--slider-thumb-color, var(--md-sys-color-primary));
-    /* Dynamic color */
-    border-radius: 50%;
     border: 2px solid var(--md-sys-color-surface);
-    /* Border for contrast */
     cursor: pointer;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
     transition: transform 0.1s ease-out;
+    margin-top: -6px;
+    /* Center thumb vertically on track */
 }
 
 .weight-slider::-webkit-slider-thumb:hover {
@@ -464,14 +465,15 @@ prompt-controller[filtered] .prompt-text-input {
 }
 
 .weight-slider::-moz-range-thumb {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    /* Adjusted for consistent appearance */
+    height: 16px;
+    /* Adjusted for consistent appearance */
     background: var(--slider-thumb-color, var(--md-sys-color-primary));
     border-radius: 50%;
     border: 2px solid var(--md-sys-color-surface);
     cursor: pointer;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-    transition: transform 0.1s ease-out;
 }
 
 .weight-slider::-moz-range-thumb:hover {
