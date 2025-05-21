@@ -1,0 +1,6 @@
+{
+  "name": "musicDJ",
+  "description": "AI music DJ based on Google music models.",
+  "requestFramePermissions": [],
+  "prompt": ""
+}
