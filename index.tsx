@@ -5,9 +5,12 @@
  */
 
 import { css, html, LitElement, svg, CSSResultGroup } from 'lit';
-import { customElement, property, query, state } from 'lit/decorators';
-import { styleMap } from 'lit/directives/style-map';
-import { classMap } from 'lit/directives/class-map';
+// MODIFIED IMPORT: Add .js extension
+import { customElement, property, query, state } from 'lit/decorators.js';
+// MODIFIED IMPORTS: Add .js extension
+import { styleMap } from 'lit/directives/style-map.js';
+import { classMap } from 'lit/directives/class-map.js';
+
 
 import { GoogleGenAI, type LiveMusicSession, type LiveMusicServerMessage } from '@google/genai';
 import { decode, decodeAudioData } from './utils'
@@ -20,11 +23,8 @@ interface Prompt {
   readonly promptId: string;
   text: string;
   weight: number;
-  // cc: number; // Removed MIDI CC
   color: string;
 }
-
-// ControlChange interface removed as it's MIDI specific
 
 type PlaybackState = 'stopped' | 'playing' | 'loading' | 'paused';
 
@@ -126,8 +126,6 @@ class ToastMessage extends LitElement {
   }
 }
 
-
-// WeightKnob component removed. Will be replaced by a slider in PromptController.
 
 // Base class for icon buttons.
 class IconButton extends LitElement {
@@ -322,10 +320,6 @@ export class PlayPauseButton extends IconButton {
   }
 }
 
-// MidiDispatcher class removed.
-
-// AudioAnalyser class removed (as its primary consumer, WeightKnob halo, is gone).
-
 /** A single prompt input controlled by a slider. */
 @customElement('prompt-controller')
 class PromptController extends LitElement {
@@ -371,7 +365,6 @@ class PromptController extends LitElement {
       max-width: 19vmin;
       min-width: 2vmin;
       padding: 0.1em 0.3em;
-      /* margin-top: 0.5vmin; // Adjusted margin */
       flex-shrink: 0;
       border-radius: 0.25vmin;
       text-align: center;
@@ -394,16 +387,11 @@ class PromptController extends LitElement {
   @property({ type: String }) promptId = '';
   @property({ type: String }) text = '';
   @property({ type: Number }) weight = 0;
-  @property({ type: String }) color = ''; // Used for slider accent color
-
-  // Removed cc, channel, learnMode, showCC, midiDispatcher, audioLevel
+  @property({ type: String }) color = '';
 
   @query('#text') private textInput!: HTMLInputElement;
-  // @query('weight-knob') private weightInput!: WeightKnob; // Removed
 
   private lastValidText!: string;
-
-  // connectedCallback related to MIDI removed.
 
   override firstUpdated() {
     this.textInput.setAttribute('contenteditable', 'plaintext-only');
@@ -412,7 +400,6 @@ class PromptController extends LitElement {
   }
 
   update(changedProperties: Map<string, unknown>) {
-    // Removed learnMode/showCC logic
     if (changedProperties.has('text') && this.textInput) {
       this.textInput.textContent = this.text;
     }
@@ -426,7 +413,6 @@ class PromptController extends LitElement {
           promptId: this.promptId,
           text: this.text,
           weight: this.weight,
-          // cc: this.cc, // Removed
           color: this.color,
         },
       }),
@@ -460,12 +446,10 @@ class PromptController extends LitElement {
     this.dispatchPromptChange();
   }
 
-  // toggleLearnMode removed.
-
   override render() {
     const sliderStyle = styleMap({
         '--slider-color': this.color,
-        '--slider-thumb-color': this.color // Or a contrasted color
+        '--slider-thumb-color': this.color
     });
 
     return html`
@@ -484,13 +468,12 @@ class PromptController extends LitElement {
         spellcheck="false"
         @focus=${this.onFocus}
         @blur=${this.updateText}></span>
-      <!-- MIDI learn UI removed -->
     </div>`;
   }
 }
 
 /** The grid of prompt inputs. */
-@customElement('prompt-dj-controller') // Renamed from PromptDjMidi
+@customElement('prompt-dj-controller')
 class PromptDjController extends LitElement {
   static override styles = css`
     :host {
@@ -512,20 +495,20 @@ class PromptDjController extends LitElement {
       background: #111;
     }
     #grid {
-      aspect-ratio: 1; /* May need adjustment depending on slider height */
+      aspect-ratio: 1;
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       width: 80vmin;
-      gap: 1.5vmin; /* Adjusted gap */
-      margin-top: 5vmin; /* Adjusted margin */
+      gap: 1.5vmin;
+      margin-top: 5vmin;
     }
     play-pause-button {
       position: relative;
-      top: -2vmin; /* Adjusted position */
+      top: -2vmin;
       width: 15vmin;
-      margin-top: 3vmin; /* Added margin for spacing */
+      margin-top: 3vmin;
     }
-    #buttons { /* This section is now empty as MIDI buttons are removed */
+    #buttons {
       position: absolute;
       top: 0;
       left: 0;
@@ -533,54 +516,40 @@ class PromptDjController extends LitElement {
       display: flex;
       gap: 5px;
     }
-    /* Button and select styles for MIDI removed */
   `;
 
-  private prompts: Map<string, Prompt>;
-  // private midiDispatcher: MidiDispatcher; // Removed
-  // private audioAnalyser: AudioAnalyser; // Removed
-
+  @state() private prompts: Map<string, Prompt>;
   @state() private playbackState: PlaybackState = 'stopped';
 
-  private session!: LiveMusicSession; // Added definite assignment assertion
+  private session!: LiveMusicSession;
   private audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 48000 });
   private outputNode: GainNode = this.audioContext.createGain();
   private nextStartTime = 0;
-  private readonly bufferTime = 2; // adds an audio buffer in case of netowrk latency
+  private readonly bufferTime = 2;
 
-  // Removed showMidi, audioLevel, midiInputIds, activeMidiInputId
-  // private audioLevelRafId: number | null = null; // Removed
-
-  @property({ type: Object })
-  private filteredPrompts = new Set<string>();
-
-  private connectionError = false; // Initialized to false, will be true on error
+  @state() private filteredPrompts = new Set<string>();
+  @state() private connectionError = false;
 
   @query('play-pause-button') private playPauseButton!: PlayPauseButton;
   @query('toast-message') private toastMessage!: ToastMessage;
 
-  constructor(
-    prompts: Map<string, Prompt>,
-    // midiDispatcher: MidiDispatcher, // Removed
-  ) {
+  constructor(initialPrompts: Map<string, Prompt>) {
     super();
-    this.prompts = prompts;
-    // this.midiDispatcher = midiDispatcher; // Removed
-    // this.audioAnalyser = new AudioAnalyser(this.audioContext); // Removed
-    // this.audioAnalyser.node.connect(this.audioContext.destination); // Removed
-    this.outputNode.connect(this.audioContext.destination); // AudioAnalyser removed from chain
-    // this.updateAudioLevel = this.updateAudioLevel.bind(this); // Removed
-    // this.updateAudioLevel(); // Removed
+    this.prompts = initialPrompts; // Initialize prompts from constructor argument
+    this.outputNode.connect(this.audioContext.destination);
   }
 
   override async firstUpdated() {
     await this.connectToSession();
-    await this.setSessionPrompts(); // Ensure prompts are set after connection
+    if (this.session) { // Only set prompts if session connection was successful
+        await this.setSessionPrompts();
+    }
   }
 
   private async connectToSession() {
     try {
-        this.playbackState = 'loading'; // Indicate loading during connection
+        this.playbackState = 'loading';
+        this.connectionError = false; // Reset error state on new attempt
         this.session = await ai.live.music.connect({
         model: model,
         callbacks: {
@@ -588,78 +557,76 @@ class PromptDjController extends LitElement {
             console.log('Received message from the server:', e);
             if (e.setupComplete) {
                 this.connectionError = false;
-                // If it was loading due to connection, and now setup is complete,
-                // and it was supposed to be playing, then set to playing.
-                // This needs careful state management if play was clicked before connection.
-                // For now, let's assume play() will be called again if needed.
                  if (this.playbackState === 'loading' && this.nextStartTime > 0) {
-                    // this implies we were trying to play but got interrupted by connection
-                    // and now connection is re-established.
-                    // If play was initiated, playbackState would be 'loading' or 'playing'.
+                    // This implies play was clicked, we were connecting/buffering, now ready
+                 } else if (this.playbackState === 'loading') {
+                    // If just connecting without explicit play, don't auto-set to playing
                  }
             }
             if (e.filteredPrompt) {
                 this.filteredPrompts = new Set([...this.filteredPrompts, e.filteredPrompt.text])
                 this.toastMessage.show(e.filteredPrompt.filteredReason || 'A prompt was filtered.');
+                this.requestUpdate('filteredPrompts');
             }
             if (e.serverContent?.audioChunks !== undefined) {
                 if (this.playbackState === 'paused' || this.playbackState === 'stopped') return;
                 
-                // Ensure context is running
                 if (this.audioContext.state === 'suspended') {
                     await this.audioContext.resume();
                 }
 
                 const audioBuffer = await decodeAudioData(
-                decode(e.serverContent?.audioChunks[0].data),
-                this.audioContext,
-                48000, // Assuming server sends 48kHz
-                2,     // Assuming server sends stereo
+                  decode(e.serverContent?.audioChunks[0].data),
+                  this.audioContext,
+                  48000,
+                  2,
                 );
                 const source = this.audioContext.createBufferSource();
                 source.buffer = audioBuffer;
                 source.connect(this.outputNode);
                 
-                if (this.nextStartTime === 0) {
-                    // First chunk, schedule with buffer time
+                if (this.nextStartTime === 0 && this.playbackState === 'loading') {
                     this.nextStartTime = this.audioContext.currentTime + this.bufferTime;
                     setTimeout(() => {
+                        // Only transition to playing if still in loading state (not paused/stopped by user)
                         if(this.playbackState === 'loading') this.playbackState = 'playing';
                     }, this.bufferTime * 1000);
+                } else if (this.nextStartTime === 0 && this.playbackState !== 'loading') {
+                    // If not loading (e.g., reconnected while paused), don't auto-start playback scheduling here
+                    return;
                 }
 
-                if (this.nextStartTime < this.audioContext.currentTime) {
-                    console.warn("Audio underrun or scheduling in the past. Resetting.");
-                    this.playbackState = 'loading'; // Indicate buffering
-                    // Attempt to resync: discard old time, schedule new chunk with a slight delay
-                    this.nextStartTime = this.audioContext.currentTime + 0.1; // Small delay to catch up
+
+                if (this.nextStartTime < this.audioContext.currentTime && this.playbackState !== 'paused' && this.playbackState !== 'stopped') {
+                    console.warn("Audio underrun or scheduling in the past. Resetting nextStartTime.");
+                    this.playbackState = 'loading'; 
+                    this.nextStartTime = this.audioContext.currentTime + 0.1; 
                 }
                 source.start(this.nextStartTime);
                 this.nextStartTime += audioBuffer.duration;
             }
             },
-            onerror: (e: ErrorEvent | Event) => { // Error can be generic Event too
+            onerror: (e: ErrorEvent | Event) => {
                 console.error('Error occurred:', e);
                 this.connectionError = true;
-                this.stop(); // Or pause, depending on desired behavior
+                this.playbackState = 'stopped'; // Or paused, to allow resume
                 this.toastMessage.show('Connection error. Please try restarting audio.');
             },
             onclose: (e: CloseEvent) => {
                 console.log('Connection closed:', e);
-                if (!e.wasClean) {
+                if (!e.wasClean) { // If not a clean close (e.g. session.stop())
                     this.connectionError = true;
-                    this.stop(); // Or pause
+                    this.playbackState = 'stopped'; // Or paused
                     this.toastMessage.show('Connection closed unexpectedly. Please try restarting audio.');
                 }
             },
         },
         });
-        this.connectionError = false; // Reset on successful connection attempt
     } catch (error) {
         console.error("Failed to connect to session:", error);
         this.connectionError = true;
         this.playbackState = 'stopped';
-        this.toastMessage.show('Failed to connect. Please check API key and network.');
+        this.toastMessage.show('Failed to connect. Check API key and network, then retry.');
     }
   }
 
@@ -667,17 +634,15 @@ class PromptDjController extends LitElement {
   private getPromptsToSend() {
     return Array.from(this.prompts.values())
       .filter((p) => {
-        return !this.filteredPrompts.has(p.text) && p.weight !== 0;
+        return !this.filteredPrompts.has(p.text) && p.weight > 0; // weight > 0 for active
       })
   }
 
   private setSessionPrompts = throttle(async () => {
     if (!this.session || this.connectionError) {
-        // If no session or connection error, don't try to set prompts.
-        // Optionally, queue this action or try to reconnect.
-        if (this.playbackState === 'playing' || this.playbackState === 'loading') {
-            this.toastMessage.show('Connection lost. Cannot update prompts.');
-            this.pause();
+        if ((this.playbackState === 'playing' || this.playbackState === 'loading')) {
+            // this.toastMessage.show('Connection issue. Cannot update prompts.');
+            // this.pause(); // Don't pause automatically if just a prompt update fails transiently
         }
         return;
     }
@@ -685,49 +650,41 @@ class PromptDjController extends LitElement {
     const promptsToSend = this.getPromptsToSend();
     if (promptsToSend.length === 0 && (this.playbackState === 'playing' || this.playbackState === 'loading')) {
       this.toastMessage.show('At least one active prompt is needed to play. Pausing.')
-      this.pause(); // Pause if no prompts are active while playing
+      this.pause();
       return;
     }
-    // If paused or stopped and no prompts, that's fine, don't send empty.
     if (promptsToSend.length === 0 && (this.playbackState === 'paused' || this.playbackState === 'stopped')) {
-        // If we intend to clear all prompts on the server when none are active:
-        // await this.session.setWeightedPrompts({ weightedPrompts: [] });
-        return; // Or simply do nothing if server handles empty prompts gracefully
+        return;
     }
 
     try {
       await this.session.setWeightedPrompts({
         weightedPrompts: promptsToSend,
       });
-      // Clear specific filtered prompts if they are no longer in the promptsToSend list
-      // (e.g., user changed text)
       const currentPromptTexts = new Set(promptsToSend.map(p => p.text));
+      let changedFiltered = false;
       this.filteredPrompts.forEach(filteredText => {
           if (!currentPromptTexts.has(filteredText)) {
               this.filteredPrompts.delete(filteredText);
+              changedFiltered = true;
           }
       });
-      this.requestUpdate('filteredPrompts');
+      if (changedFiltered) this.requestUpdate('filteredPrompts');
 
     } catch (e: any) {
       this.toastMessage.show(e.message || 'Error setting prompts.');
-      // Decide if pausing is appropriate here
-      // this.pause();
     }
   }, 200);
 
-  // updateAudioLevel removed.
 
   private dispatchPromptsChange() {
+    // This event is for external listeners, e.g., saving to localStorage
     this.dispatchEvent(
-      new CustomEvent('prompts-changed', { detail: this.prompts }),
+      new CustomEvent<Map<string, Prompt>>('prompts-changed', { detail: new Map(this.prompts) }),
     );
-    // setSessionPrompts is already throttled and will be called by setPrompts
-    // return this.setSessionPrompts(); // This might be redundant if setPrompts calls it
   }
 
   private handlePromptChanged(e: CustomEvent<Prompt>) {
-    // const { promptId, text, weight, cc } = e.detail; // cc removed
     const { promptId, text, weight, color } = e.detail;
     const prompt = this.prompts.get(promptId);
 
@@ -736,56 +693,58 @@ class PromptDjController extends LitElement {
       return;
     }
 
+    const oldText = prompt.text;
     prompt.text = text;
     prompt.weight = weight;
-    // prompt.cc = cc; // Removed
-    prompt.color = color; // Ensure color is also updated if it can change
+    prompt.color = color;
 
-    // If text changed, it might no longer be filtered
-    if (this.filteredPrompts.has(prompt.text) && e.detail.text !== prompt.text) {
-        this.filteredPrompts.delete(prompt.text); // old text
-        // The new text will be checked by the server.
+    if (this.filteredPrompts.has(oldText) && text !== oldText) {
+        this.filteredPrompts.delete(oldText);
+        this.requestUpdate('filteredPrompts');
     }
 
-
+    // Create a new map to trigger Lit's reactivity for the 'prompts' state property
     const newPrompts = new Map(this.prompts);
     newPrompts.set(promptId, prompt);
+    this.prompts = newPrompts; // This will trigger re-render of the grid
 
-    this.setPrompts(newPrompts);
-  }
-
-  private setPrompts(newPrompts: Map<string, Prompt>) {
-    this.prompts = newPrompts;
-    this.requestUpdate('prompts'); // Explicitly request update for 'prompts'
-    this.dispatchPromptsChange(); // This will notify parent/listeners
     this.setSessionPrompts(); // Update server (throttled)
-    setStoredPrompts(this.prompts); // Persist changes
+    this.dispatchPromptsChange(); // Notify external listeners (e.g., for localStorage)
   }
+
 
   /** Generates radial gradients for each prompt based on weight and color. */
   private readonly makeBackground = throttle(
     () => {
+      if (!this.prompts || this.prompts.size === 0) return '';
       const clamp01 = (v: number) => Math.min(Math.max(v, 0), 1);
 
-      const MAX_WEIGHT = 0.5; // Max weight influence for a single gradient stop for full opacity
-      const MAX_ALPHA = 0.6;  // Max alpha for a single gradient
+      const MAX_WEIGHT_EFFECT = 2.0; // Max weight of a prompt (0-2 range)
+      const MAX_ALPHA_PER_PROMPT = 0.6;
 
       const bg: string[] = [];
+      const numPrompts = this.prompts.size;
+      const numCols = 4;
+      const numRows = Math.ceil(numPrompts / numCols);
+
 
       [...this.prompts.values()].forEach((p, i) => {
-        // Alpha based on weight, capped by MAX_ALPHA
-        const alphaPct = clamp01(p.weight / MAX_WEIGHT) * MAX_ALPHA;
-        const alphaHex = Math.round(alphaPct * 255) // Alpha is 0-255
+        const alphaPct = clamp01(p.weight / MAX_WEIGHT_EFFECT) * MAX_ALPHA_PER_PROMPT;
+        const alphaHex = Math.round(alphaPct * 255)
           .toString(16)
           .padStart(2, '0');
 
-        // Gradient spread based on weight.
-        // p.weight is 0-2. A weight of 2 could mean 100% spread.
-        // Let's map weight 0-2 to 0%-100% spread for the color stop.
-        const stopPercentage = (p.weight / 2) * 100;
+        const stopPercentage = (p.weight / MAX_WEIGHT_EFFECT) * 100;
 
-        const x = (i % 4) / 3; // 0, 0.33, 0.66, 1 for 4 columns
-        const y = Math.floor(i / 4) / (Math.ceil(this.prompts.size / 4) -1  || 1) ; // Normalize Y based on rows
+        const colIndex = i % numCols;
+        const rowIndex = Math.floor(i / numCols);
+
+        // Ensure x and y are between 0 and 1 for positioning
+        // For 1 row, y should be 0.5 (or 0 if numRows-1 is 0)
+        // For x, if only 1 item in row, x should be 0.5
+        const x = numCols > 1 ? colIndex / (numCols -1 ) : 0.5;
+        const y = numRows > 1 ? rowIndex / (numRows -1) : 0.5;
+
 
         const s = `radial-gradient(circle at ${x * 100}% ${y * 100}%, ${p.color}${alphaHex} 0%, ${p.color}00 ${stopPercentage}%)`;
         bg.push(s);
@@ -793,30 +752,32 @@ class PromptDjController extends LitElement {
 
       return bg.join(', ');
     },
-    30, // don't re-render more than once every XXms
+    30,
   );
 
   private pause() {
-    if (this.session && this.playbackState !== 'paused' && this.playbackState !== 'stopped') {
+    if (this.session && (this.playbackState === 'playing' || this.playbackState === 'loading')) {
         this.session.pause();
     }
     this.playbackState = 'paused';
-    if (this.audioContext.state === 'running') { // Only manipulate gain if context is running
-        this.outputNode.gain.setValueAtTime(this.outputNode.gain.value, this.audioContext.currentTime); // Start from current gain
+    if (this.audioContext.state === 'running') {
+        const currentGain = this.outputNode.gain.value;
+        this.outputNode.gain.cancelScheduledValues(this.audioContext.currentTime);
+        this.outputNode.gain.setValueAtTime(currentGain, this.audioContext.currentTime);
         this.outputNode.gain.linearRampToValueAtTime(0, this.audioContext.currentTime + 0.1);
     }
-    // Don't reset nextStartTime immediately, allow current buffer to finish if any fadeout is desired
-    // For a hard pause, reset it:
-    // this.nextStartTime = 0;
-    // Re-creating outputNode on pause might be too disruptive. Better to manage its gain.
   }
 
-  private async play() { // Make play async for audioContext.resume()
+  private async play() {
     const promptsToSend = this.getPromptsToSend();
     if (promptsToSend.length === 0) {
-      this.toastMessage.show('There needs to be one active prompt to play. Turn up a slider to resume playback.')
-      this.pause(); // No, this should be stop or just prevent play
-      this.playbackState = 'paused'; // or 'stopped' if we don't want it to resume easily
+      this.toastMessage.show('At least one active prompt is needed. Turn up a slider.')
+      // Don't change playbackState here, let user adjust and try again.
+      // If it was playing/loading, it will pause via setSessionPrompts.
+      // If it was paused/stopped, it just won't start.
+      if (this.playbackState === 'playing' || this.playbackState === 'loading') {
+        this.pause();
+      }
       return;
     }
 
@@ -824,65 +785,56 @@ class PromptDjController extends LitElement {
         await this.audioContext.resume();
     }
     
-    if (this.session) {
-        this.session.play(); // Tell server to start sending data
-    } else {
-        console.warn("Play called without a session.");
-        // Optionally try to connect here if appropriate
-        // await this.connectToSession();
-        // if (this.session) this.session.play(); else return;
-        return;
+    if (!this.session || this.connectionError) {
+        this.toastMessage.show('Not connected. Attempting to reconnect...');
+        await this.connectToSession();
+        if (!this.session || this.connectionError) {
+            this.toastMessage.show('Connection failed. Cannot play.');
+            this.playbackState = 'stopped'; // Or 'paused'
+            return;
+        }
+    }
+    
+    // Ensure prompts are up-to-date before telling server to play
+    await this.setSessionPrompts(); 
+    // If setSessionPrompts paused due to no prompts, check again
+    if (this.playbackState === 'paused' && this.getPromptsToSend().length === 0) {
+        return; // Stay paused if no prompts became active
     }
 
-    this.playbackState = 'loading'; // Will change to 'playing' once first audio chunk is scheduled
-    this.outputNode.gain.setValueAtTime(0, this.audioContext.currentTime); // Ensure gain is 0 before ramping up
+    this.session.play();
+    this.playbackState = 'loading';
+    const currentGain = this.outputNode.gain.value;
+    this.outputNode.gain.cancelScheduledValues(this.audioContext.currentTime);
+    this.outputNode.gain.setValueAtTime(currentGain, this.audioContext.currentTime); // Start from current (likely 0 if paused)
     this.outputNode.gain.linearRampToValueAtTime(1, this.audioContext.currentTime + 0.1);
-    // nextStartTime will be set when the first audio chunk arrives
+    this.nextStartTime = 0; // Reset scheduling, will be set by first audio chunk
   }
 
   private stop() {
     if (this.session) {
-        this.session.stop();
+        this.session.stop(); // This should trigger onclose with wasClean=true
     }
     this.playbackState = 'stopped';
-    // No gain ramp, just cut. Or a very quick ramp to 0.
     if (this.audioContext.state === 'running') {
-        this.outputNode.gain.setValueAtTime(this.outputNode.gain.value, this.audioContext.currentTime);
-        this.outputNode.gain.linearRampToValueAtTime(0, this.audioContext.currentTime + 0.05); // Fast fade
+        const currentGain = this.outputNode.gain.value;
+        this.outputNode.gain.cancelScheduledValues(this.audioContext.currentTime);
+        this.outputNode.gain.setValueAtTime(currentGain, this.audioContext.currentTime);
+        this.outputNode.gain.linearRampToValueAtTime(0, this.audioContext.currentTime + 0.05);
     }
-    this.nextStartTime = 0; // Reset scheduling
-    // Consider if outputNode needs reset or just gain to 1 for next play
-    this.outputNode.gain.setValueAtTime(1, this.audioContext.currentTime + 0.1); // Prepare for next play
+    this.nextStartTime = 0;
   }
 
   private async handlePlayPause() {
     if (this.playbackState === 'playing') {
       this.pause();
     } else if (this.playbackState === 'paused' || this.playbackState === 'stopped') {
-      if (this.connectionError || !this.session) {
-        this.toastMessage.show('Reconnecting...');
-        await this.connectToSession(); // Attempt to reconnect
-        if (this.connectionError || !this.session) {
-            this.toastMessage.show('Failed to reconnect. Cannot play.');
-            return;
-        }
-      }
-      // Ensure prompts are sent if they changed while paused/stopped
-      await this.setSessionPrompts();
       await this.play();
     } else if (this.playbackState === 'loading') {
-      // If loading, typically means we are waiting for audio.
-      // Pressing again could mean "cancel loading and stop".
-      this.stop();
+      this.stop(); // Cancel loading and stop
     }
   }
 
-  // Removed toggleShowMidi, handleMidiInputChange
-
-  // resetAll function could be added here if needed, similar to:
-  // private resetAll() {
-  //   this.setPrompts(buildDefaultPrompts());
-  // }
 
   override render() {
     const bg = styleMap({
@@ -890,38 +842,32 @@ class PromptDjController extends LitElement {
     });
     return html`<div id="background" style=${bg}></div>
       <div id="buttons">
-        <!-- MIDI buttons and select removed -->
       </div>
-      <div id="grid">${this.renderPrompts()}</div>
+      <div id="grid">
+        ${[...this.prompts.values()].map((prompt) => {
+          return html`<prompt-controller
+            .promptId=${prompt.promptId}
+            ?filtered=${this.filteredPrompts.has(prompt.text)}
+            .text=${prompt.text}
+            .weight=${prompt.weight}
+            .color=${prompt.color}
+            @prompt-changed=${this.handlePromptChanged}>
+          </prompt-controller>`;
+        })}
+      </div>
       <play-pause-button .playbackState=${this.playbackState} @click=${this.handlePlayPause}></play-pause-button>
       <toast-message></toast-message>`;
-  }
-
-  private renderPrompts() {
-    return [...this.prompts.values()].map((prompt) => {
-      return html`<prompt-controller
-        promptId=${prompt.promptId}
-        ?filtered=${this.filteredPrompts.has(prompt.text)}
-        text=${prompt.text}
-        weight=${prompt.weight}
-        color=${prompt.color}
-        @prompt-changed=${this.handlePromptChanged}>
-      </prompt-controller>`;
-    });
   }
 }
 
 async function main(parent: HTMLElement) {
-  // const midiDispatcher = new MidiDispatcher(); // Removed
   const initialPrompts = getInitialPrompts();
 
-  const pdjController = new PromptDjController( // Renamed instance
+  const pdjController = new PromptDjController(
     initialPrompts,
-    // midiDispatcher, // Removed
   );
   parent.appendChild(pdjController);
 
-  // Listen for prompt changes to save them
   pdjController.addEventListener('prompts-changed', (e: Event) => {
     const customEvent = e as CustomEvent<Map<string, Prompt>>;
     setStoredPrompts(customEvent.detail);
@@ -935,17 +881,17 @@ function getInitialPrompts(): Map<string, Prompt> {
   if (storedPrompts) {
     try {
       const parsedPromptsArray = JSON.parse(storedPrompts) as Prompt[];
-      // Ensure prompts don't have old 'cc' fields or handle them gracefully
       const cleanPrompts = parsedPromptsArray.map(p => ({
         promptId: p.promptId,
         text: p.text,
-        weight: p.weight,
-        color: p.color,
+        weight: typeof p.weight === 'number' ? p.weight : 0, // Ensure weight is a number
+        color: p.color || '#ffffff', // Ensure color exists
       }));
       console.log('Loading stored prompts', cleanPrompts);
       return new Map(cleanPrompts.map((prompt) => [prompt.promptId, prompt]));
     } catch (e) {
       console.error('Failed to parse stored prompts, using defaults.', e);
+      localStorage.removeItem('prompts'); // Clear corrupted data
     }
   }
   console.log('No stored prompts, using default prompts');
@@ -953,8 +899,6 @@ function getInitialPrompts(): Map<string, Prompt> {
 }
 
 function buildDefaultPrompts() {
-  // Construct default prompts
-  // Pick 3 random prompts to start with weight 1
   const startOn = [...DEFAULT_PROMPTS]
     .sort(() => Math.random() - 0.5)
     .slice(0, 3);
@@ -968,7 +912,6 @@ function buildDefaultPrompts() {
       promptId,
       text,
       weight: startOn.some(startPrompt => startPrompt.text === text) ? 1 : 0,
-      // cc: i, // Removed
       color,
     });
   });
@@ -976,7 +919,6 @@ function buildDefaultPrompts() {
 }
 
 function setStoredPrompts(prompts: Map<string, Prompt>) {
-  // Ensure prompts being stored don't have 'cc'
   const promptsArray = [...prompts.values()].map(p => ({
     promptId: p.promptId,
     text: p.text,
@@ -988,7 +930,6 @@ function setStoredPrompts(prompts: Map<string, Prompt>) {
     window.localStorage.setItem('prompts', storedPrompts);
   } catch (e) {
     console.error("Error saving prompts to localStorage:", e);
-    // Potentially show a toast message to the user
   }
 }
 
@@ -996,9 +937,8 @@ main(document.body);
 
 declare global {
   interface HTMLElementTagNameMap {
-    'prompt-dj-controller': PromptDjController; // Renamed
+    'prompt-dj-controller': PromptDjController;
     'prompt-controller': PromptController;
-    // 'weight-knob': WeightKnob; // Removed
     'play-pause-button': PlayPauseButton;
     'toast-message': ToastMessage
   }
