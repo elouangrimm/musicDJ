@@ -318,10 +318,28 @@ class PromptDjController extends LitElement {
 
   private async loadAndInitializePrompts() {
     try {
-      const response = await fetch('default-prompts.json');
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      const response = `
+      
+      [
+        { "color": "#D0BCFF", "text": "Bossa Nova" },
+        { "color": "#A8C7FA", "text": "Chillwave" },
+        { "color": "#F48FB1", "text": "Drum and Bass" },
+        { "color": "#80DEEA", "text": "Post Punk" },
+        { "color": "#FFE082", "text": "Shoegaze" },
+        { "color": "#A5D6A7", "text": "Funk" },
+        { "color": "#CE93D8", "text": "Chiptune" },
+        { "color": "#C5E1A5", "text": "Lush Strings" },
+        { "color": "#FFF59D", "text": "Sparkling Arpeggios" },
+        { "color": "#B39DDB", "text": "Staccato Rhythms" },
+        { "color": "#81C784", "text": "Punchy Kick" },
+        { "color": "#FFB74D", "text": "Dubstep" },
+        { "color": "#F8BBD0", "text": "LoFi" },
+        { "color": "#E6EE9C", "text": "Neo Soul" },
+        { "color": "#B0BEC5", "text": "Trip Hop" },
+        { "color": "#EF9A9A", "text": "Thrash" }
+      ]
+
+      `
       LOADED_DEFAULT_PROMPTS = await response.json();
       this.prompts = getInitialPrompts();
       this.requestUpdate();
