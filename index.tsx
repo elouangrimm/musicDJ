@@ -1,27 +1,18 @@
-/**
- * @fileoverview Control real time music with sliders
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
-import { html, LitElement, svg, CSSResultGroup } from 'lit'; // css removed from here
+import { html, LitElement, svg } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
 import { styleMap } from 'lit/directives/style-map.js';
 import { classMap } from 'lit/directives/class-map.js';
 
 import { GoogleGenAI, type LiveMusicSession, type LiveMusicServerMessage } from '@google/genai';
-import { decode, decodeAudioData } from './utils'
+import { decode, decodeAudioData } from './utils';
 
-// --- Environment Variable Check ---
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-if (!GEMINI_API_KEY) {
-  const errorMsg = "GEMINI_API_KEY is not set. Please set it in your environment variables.";
-  document.body.innerHTML = `<div style="color: red; font-family: sans-serif; padding: 20px;">${errorMsg}</div>`;
-  throw new Error(errorMsg);
-}
-const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY, apiVersion: 'v1alpha' });
-const model = 'lyria-realtime-exp';
 
+interface DefaultPromptData {
+  color: string;
+  text: string;
+}
+let LOADED_DEFAULT_PROMPTS: DefaultPromptData[] = [];
 
 interface Prompt {
   readonly promptId: string;
@@ -49,35 +40,16 @@ function throttle<T extends (...args: Parameters<T>) => ReturnType<T>>(
   };
 }
 
-const DEFAULT_PROMPTS = [
-  { color: '#7B61FF', text: 'Bossa Nova' }, // Purple
-  { color: '#5271FF', text: 'Chillwave' },  // Blue
-  { color: '#E91E63', text: 'Drum and Bass' },// Pink
-  { color: '#00BCD4', text: 'Post Punk' },    // Cyan
-  { color: '#FFC107', text: 'Shoegaze' },     // Amber
-  { color: '#4CAF50', text: 'Funk' },         // Green
-  { color: '#9C27B0', text: 'Chiptune' },     // Deep Purple
-  { color: '#8BC34A', text: 'Lush Strings' }, // Light Green
-  { color: '#FFEB3B', text: 'Sparkling Arpeggios' }, // Yellow
-  { color: '#BEABFF', text: 'Staccato Rhythms' }, // Lavender
-  { color: '#A1F7B9', text: 'Punchy Kick' },   // Mint Green
-  { color: '#FF9800', text: 'Dubstep' },      // Orange
-  { color: '#F06292', text: 'K Pop' },        // Light Pink
-  { color: '#CDDC39', text: 'Neo Soul' },     // Lime
-  { color: '#607D8B', text: 'Trip Hop' },     // Blue Grey
-  { color: '#D32F2F', text: 'Thrash' },       // Red
-];
-
-// --- Toast Message component ---
 @customElement('toast-message')
 class ToastMessage extends LitElement {
-  // static override styles removed
-
   @property({ type: String }) message = '';
   @property({ type: Boolean }) showing = false;
 
+  override createRenderRoot() {
+    return this;
+  }
+
   override render() {
-    // Added classes for external styling
     return html`
       <div class="toast-container ${classMap({ showing: this.showing })}">
         <div class="toast-message-content">
@@ -87,10 +59,6 @@ class ToastMessage extends LitElement {
             </button>
         </div>
       </div>`;
-  }
-
-  override createRenderRoot() {
-    return this; // This makes the component render its template into the Light DOM
   }
 
   show(message: string, duration = 5000) {
@@ -106,16 +74,13 @@ class ToastMessage extends LitElement {
   }
 }
 
-// --- Base class for icon buttons (simplified for CSS styling) ---
 class IconButtonBase extends LitElement {
-  // static override styles removed
-  // Removed complex SVG shell, will use simpler button structure
   protected renderIcon() {
     return svg``;
   }
 
   override createRenderRoot() {
-    return this; // This makes the component render its template into the Light DOM
+    return this;
   }
 
   override render() {
@@ -127,12 +92,8 @@ class IconButtonBase extends LitElement {
   }
 }
 
-
-// --- PlayPauseButton ---
 @customElement('play-pause-button')
 export class PlayPauseButton extends IconButtonBase {
-  // static override styles removed
-
   @property({ type: String }) playbackState: PlaybackState = 'stopped';
 
   private renderPause() {
@@ -147,10 +108,6 @@ export class PlayPauseButton extends IconButtonBase {
             <circle class="loader-bg" cx="12" cy="12" r="10" />
             <circle class="loader-fg" cx="12" cy="12" r="10" />
         </svg>`;
-  }
-
-  override createRenderRoot() {
-    return this; // This makes the component render its template into the Light DOM
   }
 
   override renderIcon() {
@@ -171,11 +128,8 @@ export class PlayPauseButton extends IconButtonBase {
   }
 }
 
-// --- PromptController ---
 @customElement('prompt-controller')
 class PromptController extends LitElement {
-  // static override styles removed
-
   @property({ type: String }) promptId = '';
   @property({ type: String }) text = '';
   @property({ type: Number }) weight = 0;
@@ -186,8 +140,14 @@ class PromptController extends LitElement {
 
   private lastValidText!: string;
 
+  override createRenderRoot() {
+    return this;
+  }
+
   override firstUpdated() {
-    this.textInputEl.textContent = this.text;
+    if (this.textInputEl) {
+        this.textInputEl.textContent = this.text;
+    }
     this.lastValidText = this.text;
   }
 
@@ -213,9 +173,7 @@ class PromptController extends LitElement {
     );
   }
 
-  private handleTextInput(e: Event) {
-    // Not strictly needed for contenteditable span, blur is main trigger
-  }
+  private handleTextInput(e: Event) {}
 
   private handleTextBlur(e: Event) {
     const newText = this.textInputEl.textContent?.trim();
@@ -240,7 +198,7 @@ class PromptController extends LitElement {
 
   private onFocus() {
     const selection = window.getSelection();
-    if (!selection) return;
+    if (!selection || !this.textInputEl) return;
     const range = document.createRange();
     range.selectNodeContents(this.textInputEl);
     selection.removeAllRanges();
@@ -253,19 +211,14 @@ class PromptController extends LitElement {
     this.dispatchPromptChange();
   }
 
-  override createRenderRoot() {
-    return this; // This makes the component render its template into the Light DOM
-  }
-
   override render() {
     const haloStyle = styleMap({
         '--prompt-halo-color': this.color,
-        'opacity': (this.weight / 2 * 0.7).toString() // Max opacity 0.7 for halo
+        'opacity': (this.weight / 2 * 0.7).toString()
     });
     const sliderThumbStyle = styleMap({
         '--slider-thumb-color': this.color,
     });
-
 
     return html`
     <div class="prompt-card" style=${sliderThumbStyle}>
@@ -297,49 +250,66 @@ class PromptController extends LitElement {
   }
 }
 
-// --- PromptDjController (Main App) ---
 @customElement('prompt-dj-controller')
 class PromptDjController extends LitElement {
-  // static override styles removed
-
-  @state() private prompts: Map<string, Prompt>;
+  @state() private prompts!: Map<string, Prompt>;
   @state() private playbackState: PlaybackState = 'stopped';
+  @state() private promptsLoaded: boolean = false;
 
   private session!: LiveMusicSession;
-  private audioContext!: AudioContext; // Will be initialized on first user interaction
+  private audioContext!: AudioContext;
   private outputNode!: GainNode;
   private nextStartTime = 0;
-  private readonly bufferTime = 1.5; // Reduced buffer time slightly
+  private readonly bufferTime = 1.5;
 
   @state() private filteredPrompts = new Set<string>();
   @state() private connectionError = false;
 
   @query('toast-message') private toastMessage!: ToastMessage;
 
-  // Artwork for Media Session API
   private mediaArtwork = [
     { src: 'music_icon_192.png', sizes: '192x192', type: 'image/png' },
-    // Add other sizes if you have them
   ];
-  // Create a dummy PNG for the artwork if not available.
-  // You should replace 'music_icon_192.png' with an actual icon.
-  // For now, I'll skip creating it dynamically here.
 
   constructor() {
     super();
-    this.prompts = getInitialPrompts();
-    this.initializeAudioContext(); // Initialize on creation
+    this.initializeAudioContext();
   }
 
   override createRenderRoot() {
-    return this; // This makes the component render its template into the Light DOM
+    return this;
+  }
+
+  async connectedCallback() {
+    super.connectedCallback();
+    if (!this.promptsLoaded) {
+      await this.loadAndInitializePrompts();
+      this.promptsLoaded = true;
+    }
+  }
+
+  private async loadAndInitializePrompts() {
+    try {
+      const response = await fetch('./default-prompts.json');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      LOADED_DEFAULT_PROMPTS = await response.json();
+      this.prompts = getInitialPrompts();
+      this.requestUpdate();
+    } catch (error) {
+      console.error("Could not load default prompts:", error);
+      LOADED_DEFAULT_PROMPTS = [];
+      this.prompts = getInitialPrompts();
+      this.toastMessage?.show("Error loading default prompts. Using fallback.", 5000);
+    }
   }
 
   private initializeAudioContext() {
     if (!this.audioContext) {
         this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({
              sampleRate: 48000,
-             latencyHint: 'interactive' // or 'playback'
+             latencyHint: 'interactive'
         });
         this.outputNode = this.audioContext.createGain();
         this.outputNode.connect(this.audioContext.destination);
@@ -352,18 +322,16 @@ class PromptDjController extends LitElement {
     }
   }
 
-
   override async firstUpdated() {
-    // Defer connection until first play or explict connect button
-    // await this.connectToSession();
-    // if (this.session) {
-    //     await this.setSessionPrompts();
-    // }
-    this.updateMediaSessionState(); // Initial state for media session
+    this.updateMediaSessionState();
   }
 
   private async connectToSession() {
-    if (this.session && !this.connectionError) return true; // Already connected
+    if (!this.promptsLoaded) {
+        this.toastMessage?.show("Prompts not loaded yet. Please wait.", 3000);
+        return false;
+    }
+    if (this.session && !this.connectionError) return true;
 
     try {
         this.playbackState = 'loading';
@@ -411,7 +379,7 @@ class PromptDjController extends LitElement {
                       console.warn("Audio underrun. Resetting nextStartTime.");
                       this.playbackState = 'loading';
                       this.updateMediaSessionState();
-                      this.nextStartTime = this.audioContext.currentTime + 0.2; // थोड़ा सा गैप
+                      this.nextStartTime = this.audioContext.currentTime + 0.2;
                   }
                   source.start(this.nextStartTime);
                   this.nextStartTime += audioBuffer.duration;
@@ -428,14 +396,14 @@ class PromptDjController extends LitElement {
             },
             onclose: (e: CloseEvent) => {
                 console.log('Connection closed:', e.reason, 'Clean:', e.wasClean);
-                if (!e.wasClean && this.playbackState !== 'stopped') { // If not manually stopped
+                if (!e.wasClean && this.playbackState !== 'stopped') {
                     this.connectionError = true;
                     this.playbackState = 'stopped';
                      this.updateMediaSessionState();
                     this.toastMessage.show('Connection closed. Please restart audio.');
                 }
                 // @ts-ignore
-                this.session = null; // Clear session
+                this.session = null;
             },
         },
         });
@@ -452,13 +420,14 @@ class PromptDjController extends LitElement {
 
 
   private getPromptsToSend() {
+    if (!this.prompts) return [];
     return Array.from(this.prompts.values())
       .filter((p) => !this.filteredPrompts.has(p.text) && p.weight > 0)
-      .map(p => ({text: p.text, weight: p.weight})); // Only send text and weight
+      .map(p => ({text: p.text, weight: p.weight}));
   }
 
   private setSessionPrompts = throttle(async () => {
-    if (!this.session || this.connectionError) return;
+    if (!this.promptsLoaded || !this.session || this.connectionError) return;
 
     const promptsToSend = this.getPromptsToSend();
     if (promptsToSend.length === 0 && (this.playbackState === 'playing' || this.playbackState === 'loading')) {
@@ -466,7 +435,7 @@ class PromptDjController extends LitElement {
       this.pause();
       return;
     }
-    if (promptsToSend.length === 0) return; // Don't send if nothing to send and not playing
+    if (promptsToSend.length === 0) return;
 
     try {
       await this.session.setWeightedPrompts({ weightedPrompts: promptsToSend });
@@ -479,7 +448,7 @@ class PromptDjController extends LitElement {
           }
       });
       if (changedFiltered) this.requestUpdate('filteredPrompts');
-      this.updateMediaSessionMetadata(); // Update metadata if prompts change
+      this.updateMediaSessionMetadata();
 
     } catch (e: any) {
       this.toastMessage.show(`Error setting prompts: ${e.message}`);
@@ -488,12 +457,14 @@ class PromptDjController extends LitElement {
 
 
   private dispatchPromptsChange() {
+    if (!this.prompts) return;
     this.dispatchEvent(
       new CustomEvent<Map<string, Prompt>>('prompts-changed', { detail: new Map(this.prompts), bubbles: true, composed: true }),
     );
   }
 
   private handlePromptChanged(e: CustomEvent<Prompt>) {
+    if (!this.prompts) return;
     const { promptId, text, weight, color } = e.detail;
     const prompt = this.prompts.get(promptId);
     if (!prompt) return;
@@ -511,42 +482,39 @@ class PromptDjController extends LitElement {
             this.requestUpdate('filteredPrompts');
         }
         const newPrompts = new Map(this.prompts);
-        newPrompts.set(promptId, { ...prompt }); // Ensure new object for Lit's dirty checking
+        newPrompts.set(promptId, { ...prompt });
         this.prompts = newPrompts;
 
         this.setSessionPrompts();
-        this.dispatchPromptsChange(); // For localStorage
+        this.dispatchPromptsChange();
     }
   }
 
   private readonly makeBackground = throttle(() => {
       if (!this.prompts || this.prompts.size === 0) return '';
-      // ... (background generation logic - keep as is or adapt for CSS variables)
-      // This logic can remain, as it sets an inline style on the #background div.
-      // For a more Material You approach, this could influence CSS custom properties
-      // that other elements then use, but direct inline style is fine for the background.
       const clamp01 = (v: number) => Math.min(Math.max(v, 0), 1);
       const MAX_WEIGHT_EFFECT = 2.0;
-      const MAX_ALPHA_PER_PROMPT = 0.5; // Reduced max alpha for subtlety
+      const MAX_ALPHA_PER_PROMPT = 0.5;
       const bg: string[] = [];
       const numPrompts = this.prompts.size;
-      const numCols = 4; // Assume 4 columns for positioning calculations
+      const numCols = 4;
       const numRows = Math.ceil(numPrompts / numCols);
+      const defaultPromptsForIndexing = LOADED_DEFAULT_PROMPTS.length > 0 ? LOADED_DEFAULT_PROMPTS : Array.from(this.prompts.values());
+
 
       [...this.prompts.values()].filter(p => p.weight > 0.01).forEach((p, i_active) => {
-          // Use original index for positioning to keep it stable
-          const originalIndex = DEFAULT_PROMPTS.findIndex(dp => dp.text === p.text && dp.color === p.color);
+          const originalIndex = defaultPromptsForIndexing.findIndex(dp => dp.text === p.text && dp.color === p.color);
           const i = originalIndex !== -1 ? originalIndex : i_active;
 
 
           const alphaPct = clamp01(p.weight / MAX_WEIGHT_EFFECT) * MAX_ALPHA_PER_PROMPT;
           const alphaHex = Math.round(alphaPct * 255).toString(16).padStart(2, '0');
-          const stopPercentage = (p.weight / MAX_WEIGHT_EFFECT) * 70 + 30; // Spread from 30% to 100%
+          const stopPercentage = (p.weight / MAX_WEIGHT_EFFECT) * 70 + 30;
 
           const colIndex = i % numCols;
           const rowIndex = Math.floor(i / numCols);
           
-          const xJitter = (Math.random() - 0.5) * 0.1; // Small jitter for organic feel
+          const xJitter = (Math.random() - 0.5) * 0.1;
           const yJitter = (Math.random() - 0.5) * 0.1;
 
           const x = numCols > 1 ? colIndex / (numCols -1 ) + xJitter : 0.5 + xJitter;
@@ -555,7 +523,6 @@ class PromptDjController extends LitElement {
           const clampedX = clamp01(x) * 100;
           const clampedY = clamp01(y) * 100;
 
-          // Make gradients larger and softer
           bg.push(`radial-gradient(circle at ${clampedX}% ${clampedY}%, ${p.color}${alphaHex} 0%, ${p.color}00 ${clamp01(stopPercentage / 100) * 100}%)`);
       });
       return bg.join(', ');
@@ -578,6 +545,10 @@ class PromptDjController extends LitElement {
   }
 
   private async play() {
+    if (!this.promptsLoaded) {
+        this.toastMessage?.show("Initializing prompts... Please try again shortly.", 3000);
+        return;
+    }
     await this.ensureAudioContextResumed();
     
     if (!this.session || this.connectionError) {
@@ -585,7 +556,7 @@ class PromptDjController extends LitElement {
         const connected = await this.connectToSession();
         if (!connected) {
             this.toastMessage.show('Connection failed. Cannot play.');
-            this.playbackState = 'stopped'; // Ensure state reflects failure
+            this.playbackState = 'stopped';
             this.updateMediaSessionState();
             return;
         }
@@ -595,7 +566,7 @@ class PromptDjController extends LitElement {
     if (promptsToSend.length === 0) {
       this.toastMessage.show('Add some vibes! Turn up a prompt slider to begin.', 3000)
       if (this.playbackState === 'playing' || this.playbackState === 'loading') {
-        this.pause(); // It will pause if it was playing/loading
+        this.pause();
       }
       return;
     }
@@ -606,7 +577,7 @@ class PromptDjController extends LitElement {
     }
 
     this.session.play();
-    this.playbackState = 'loading'; // Will transition to 'playing' via onmessage
+    this.playbackState = 'loading';
     const currentGain = this.outputNode.gain.value;
     this.outputNode.gain.cancelScheduledValues(this.audioContext.currentTime);
     this.outputNode.gain.setValueAtTime(currentGain, this.audioContext.currentTime);
@@ -619,8 +590,8 @@ class PromptDjController extends LitElement {
   private async stop() {
     await this.ensureAudioContextResumed();
     if (this.session) {
-        this.session.stop(); // This should trigger onclose with wasClean=true
-        // @ts-ignore - Allow setting to null
+        this.session.stop();
+        // @ts-ignore
         this.session = null; 
     }
     this.playbackState = 'stopped';
@@ -632,11 +603,10 @@ class PromptDjController extends LitElement {
     }
     this.nextStartTime = 0;
     this.updateMediaSessionState();
-    // navigator.mediaSession.metadata = null; // Clear metadata
   }
 
   private async handlePlayPause() {
-    await this.ensureAudioContextResumed(); // Crucial for user-initiated actions
+    await this.ensureAudioContextResumed();
     if (this.playbackState === 'playing') {
       this.pause();
     } else if (this.playbackState === 'paused' || this.playbackState === 'stopped') {
@@ -646,12 +616,11 @@ class PromptDjController extends LitElement {
     }
   }
 
-  // --- Media Session API Integration ---
   private updateMediaSessionMetadata() {
-    if (!('mediaSession' in navigator)) return;
+    if (!('mediaSession' in navigator) || !this.prompts) return;
 
     const activePrompts = Array.from(this.prompts.values()).filter(p => p.weight > 0.5);
-    let title = "Lyria Realtime DJ";
+    let title = "musicDJ AI";
     if (activePrompts.length > 0) {
         title = activePrompts.slice(0, 2).map(p => p.text).join(' + ');
         if (activePrompts.length > 2) title += " & more";
@@ -674,11 +643,13 @@ class PromptDjController extends LitElement {
 
     navigator.mediaSession.setActionHandler('play', () => this.handlePlayPause());
     navigator.mediaSession.setActionHandler('pause', () => this.handlePlayPause());
-    // navigator.mediaSession.setActionHandler('stop', () => this.stop()); // Optional
   }
 
 
   override render() {
+    if (!this.promptsLoaded) {
+        return html`<div class="loading-prompts">Loading Prompts...</div>`;
+    }
     const backgroundStyle = styleMap({
       backgroundImage: this.makeBackground(),
     });
@@ -715,9 +686,16 @@ class PromptDjController extends LitElement {
   }
 }
 
-// --- Main Initialization ---
+const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY, apiVersion: 'v1alpha' });
+const model = 'lyria-realtime-exp';
+
 async function main(parent: HTMLElement) {
-  if (!GEMINI_API_KEY) return; // Stop if API key not found
+  if (!GEMINI_API_KEY) {
+    const errorMsg = "FATAL ERROR: GEMINI_API_KEY is not set. The application cannot run. Please set the GEMINI_API_KEY environment variable and rebuild/redeploy.";
+    console.error(errorMsg);
+    parent.innerHTML = `<div style="color: #F44336; background-color: #FFEBEE; border: 1px solid #FFCDD2; padding: 20px; margin: 20px; font-family: 'Roboto', sans-serif; border-radius: 8px; text-align: center;"><h2>Configuration Error</h2><p>${errorMsg}</p></div>`;
+    return;
+  }
 
   const pdjController = new PromptDjController();
   parent.appendChild(pdjController);
@@ -730,16 +708,18 @@ async function main(parent: HTMLElement) {
 
 function getInitialPrompts(): Map<string, Prompt> {
   const { localStorage } = window;
-  const storedPrompts = localStorage.getItem('prompts-v2'); // Use new key for new structure/colors
+  const storedPrompts = localStorage.getItem('prompts-v2');
 
   if (storedPrompts) {
     try {
       const parsedPromptsArray = JSON.parse(storedPrompts) as Prompt[];
+      const defaultPromptsMap = new Map(LOADED_DEFAULT_PROMPTS.map(p => [p.text, p.color]));
+
       const cleanPrompts = parsedPromptsArray.map(p => ({
         promptId: p.promptId,
         text: p.text,
         weight: typeof p.weight === 'number' ? p.weight : 0,
-        color: p.color || DEFAULT_PROMPTS.find(dp => dp.text === p.text)?.color || '#7B61FF', // Fallback color
+        color: p.color || defaultPromptsMap.get(p.text) || '#D0BCFF',
       }));
       return new Map(cleanPrompts.map((prompt) => [prompt.promptId, prompt]));
     } catch (e) {
@@ -747,13 +727,18 @@ function getInitialPrompts(): Map<string, Prompt> {
       localStorage.removeItem('prompts-v2');
     }
   }
-  // Build default prompts with new colors
+
   const prompts = new Map<string, Prompt>();
-  const startOnTexts = [...DEFAULT_PROMPTS]
+  if (LOADED_DEFAULT_PROMPTS.length === 0) {
+      console.warn("LOADED_DEFAULT_PROMPTS is empty during getInitialPrompts.");
+      return prompts;
+  }
+
+  const startOnTexts = [...LOADED_DEFAULT_PROMPTS]
     .sort(() => Math.random() - 0.5)
     .slice(0, 3).map(p => p.text);
 
-  DEFAULT_PROMPTS.forEach((defaultPromptData, i) => {
+  LOADED_DEFAULT_PROMPTS.forEach((defaultPromptData, i) => {
     const promptId = `prompt-${i}`;
     prompts.set(promptId, {
       promptId,
@@ -780,7 +765,16 @@ function setStoredPrompts(prompts: Map<string, Prompt>) {
   }
 }
 
-main(document.body);
+if (GEMINI_API_KEY) {
+    main(document.body).catch(err => {
+        console.error("Error in main execution:", err);
+        document.body.innerHTML = `<div style="color: red; padding: 20px;">Critical error during app startup. Check console.</div>`;
+    });
+} else {
+    const errorMsg = "FATAL ERROR: GEMINI_API_KEY is not set. The application cannot run. Please set the GEMINI_API_KEY environment variable and rebuild/redeploy.";
+    document.body.innerHTML = `<div style="color: #F44336; background-color: #FFEBEE; border: 1px solid #FFCDD2; padding: 20px; margin: 20px; font-family: 'Roboto', sans-serif; border-radius: 8px; text-align: center;"><h2>Configuration Error</h2><p>${errorMsg}</p></div>`;
+}
+
 
 declare global {
   interface Window {
