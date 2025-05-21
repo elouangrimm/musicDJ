@@ -658,7 +658,7 @@ class PromptDjController extends LitElement {
       <div id="background-layer" style=${backgroundStyle}></div>
       <div class="app-layout">
         <header class="app-header">
-            <h1>Lyria Realtime DJ</h1>
+            <h1>musicDJ AI</h1>
         </header>
         <main class="app-main-content">
             <div id="prompt-grid-container">

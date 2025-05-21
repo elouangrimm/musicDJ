@@ -36,6 +36,9 @@
     --footer-height: 80px;
     --header-height: 60px;
 
+    --slider-thumb-size: 20px;
+    --slider-track-height: 6px;
+
     font-synthesis: none;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
@@ -413,12 +416,11 @@ prompt-controller[filtered] .prompt-text-input {
     width: 100%;
     position: relative;
     z-index: 1;
-    height: 18px;
-    /* Adjusted height */
+    /* height: 20px; -- Let content define height, or set larger if needed for thumb visual space */
+    padding: 8px 0;
+    /* Add some vertical padding to give space for the thumb visually */
     display: flex;
     align-items: center;
-    margin-top: auto;
-    /* Push slider towards bottom if space available */
 }
 
 .weight-slider {
@@ -432,51 +434,45 @@ prompt-controller[filtered] .prompt-text-input {
     outline: none;
     cursor: pointer;
     margin: 0;
-    /* Container handles spacing */
     padding: 0;
-    /* Ensure no extra padding affects track position */
     display: block;
-    /* Ensure it behaves as a block for consistent layout */
     position: relative;
-    /* For potential pseudo-elements if needed, though not used for thumb here */
+    /* Important for ensuring thumb positioning is relative to this track */
 }
 
 .slider-track-fill {
     position: absolute;
     left: 0;
-    top: 50%;
-    transform: translateY(-50%);
+    /* Calculate top based on slider-container padding and track height */
+    top: calc(50% - 3px);
     height: 6px;
+    /* Match track height */
     background-color: var(--slider-thumb-color, var(--md-sys-color-primary));
     border-radius: var(--border-radius-full);
     pointer-events: none;
-    z-index: -1;
+    /* This will be visually behind the actual input's track if positioned correctly */
+    z-index: 0;
+    /* Behind the input track visually if they overlap perfectly */
+    /* Or use z-index: 1 if input track is transparent for the fill */
 }
 
 .weight-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
-    /* Essential */
     appearance: none;
-    width: 20px;
-    /* Diameter of the circle */
-    height: 20px;
-    /* Diameter of the circle */
+    width: var(--slider-thumb-size);
+    height: var(--slider-thumb-size);
     background: var(--slider-thumb-color, var(--md-sys-color-primary));
     border-radius: 50%;
-    /* Makes it a circle */
     border: 2px solid var(--md-sys-color-surface);
-    /* Card's surface color */
     cursor: pointer;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-    /* Subtle shadow */
     transition: transform 0.1s ease-out, box-shadow 0.1s ease-out;
-    /* Centering: WebKit thumbs are vertically centered on the track by default
-       IF the track has a defined height and the thumb also has a defined height.
-       No explicit margin-top should be needed if track height (6px) and thumb height (20px)
-       are correctly interpreted. */
-    margin-top: -7px;
-    /* (thumb_height - track_height) / 2 negated. (20px - 6px) / 2 = 7px. */
-    /* This is often needed because the thumb is drawn *over* the track. */
+    /*
+      For WebKit, the thumb is drawn "on top" of the track.
+      To center a 20px thumb on a 6px track:
+      The thumb needs to be pulled up by (20px - 6px) / 2 = 7px.
+    */
+    margin-top: calc((var(--slider-track-height) - var(--slider-thumb-size)) / 2);
 }
 
 .weight-slider::-webkit-slider-thumb:hover {
@@ -486,25 +482,38 @@ prompt-controller[filtered] .prompt-text-input {
 
 .weight-slider::-webkit-slider-thumb:active {
     transform: scale(1.05);
-    background-color: var(--slider-thumb-color-active, var(--md-sys-color-primary));
-    /* Could darken slightly on active */
+    /* background-color: var(--slider-thumb-color-active, var(--md-sys-color-primary)); */
+}
+
+.weight-slider::-moz-range-track {
+    height: var(--slider-track-height);
+    background: var(--md-sys-color-outline);
+    border: none;
+    /* Remove default border */
+    border-radius: var(--border-radius-full);
+}
+
+.weight-slider::-moz-range-progress {
+    /* This is Firefox's built-in track fill */
+    height: var(--slider-track-height);
+    background-color: var(--slider-thumb-color, var(--md-sys-color-primary));
+    border-radius: var(--border-radius-full);
+    border: none;
 }
 
 
-/* Mozilla Firefox */
 .weight-slider::-moz-range-thumb {
-    width: 20px;
-    /* Diameter of the circle */
-    height: 20px;
-    /* Diameter of the circle */
+    width: var(--slider-thumb-size);
+    height: var(--slider-thumb-size);
     background: var(--slider-thumb-color, var(--md-sys-color-primary));
     border-radius: 50%;
-    /* Makes it a circle */
     border: 2px solid var(--md-sys-color-surface);
+    /* This border is crucial for Firefox visual centering */
     cursor: pointer;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
     transition: transform 0.1s ease-out, box-shadow 0.1s ease-out;
-    /* Firefox generally centers its thumb well by default on the track */
+    /* Firefox usually centers this well if the track and thumb heights are defined,
+       and especially if the thumb has a border that "sits" on the track. */
 }
 
 .weight-slider::-moz-range-thumb:hover {
@@ -514,33 +523,11 @@ prompt-controller[filtered] .prompt-text-input {
 
 .weight-slider::-moz-range-thumb:active {
     transform: scale(1.05);
-    background-color: var(--slider-thumb-color-active, var(--md-sys-color-primary));
 }
 
-/* Microsoft Edge (Legacy - for older Edge, Chromium Edge uses -webkit- ) */
-/* Modern Edge uses -webkit- styles, but this is for completeness if targeting older versions */
-.weight-slider::-ms-thumb {
-    width: 20px;
-    /* Diameter of the circle */
-    height: 20px;
-    /* Diameter of the circle */
-    background: var(--slider-thumb-color, var(--md-sys-color-primary));
-    border-radius: 50%;
-    /* Makes it a circle */
-    border: 2px solid var(--md-sys-color-surface);
-    cursor: pointer;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-    transition: transform 0.1s ease-out, box-shadow 0.1s ease-out;
-    margin-top: 0;
-    /* Edge usually handles centering well too if track height is set */
-}
-
-.weight-slider::-ms-thumb:hover {
-    transform: scale(1.1);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
-}
-
-.weight-slider::-ms-thumb:active {
-    transform: scale(1.05);
-    background-color: var(--slider-thumb-color-active, var(--md-sys-color-primary));
+/* Remove our custom .slider-track-fill for Firefox if using ::-moz-range-progress */
+@-moz-document url-prefix() {
+    .slider-track-fill {
+        display: none !important;
+    }
 }
