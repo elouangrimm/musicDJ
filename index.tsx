@@ -490,6 +490,9 @@ class PromptDjController extends LitElement {
 
     try {
       await this.session.setWeightedPrompts({ weightedPrompts: promptsToSend });
+      await this.session.setMusicGenerationConfig({
+        musicGenerationConfig: { guidance: 4.25, temperature: 1.2 },
+      });
       const currentPromptTexts = new Set(promptsToSend.map(p => p.text));
       let changedFiltered = false;
       this.filteredPrompts.forEach(filteredText => {

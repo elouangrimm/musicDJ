@@ -168,8 +168,6 @@ body {
     /* NEW */
     top: 0;
     left: 50%;
-    width: 100%;
-    /* Make it full width for top bar style */
     transform: translateX(-50%) translateY(-150%);
     /* Start off-screen above */
     background-color: var(--md-sys-color-inverse-surface);
@@ -185,8 +183,6 @@ body {
     /* Shadow might need adjustment */
     display: flex;
     align-items: center;
-    justify-content: center;
-    /* Center content for full-width toast */
     /* gap: 12px; */
     /* min-width: 280px; */
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -205,9 +201,7 @@ body {
 
 .toast-message-content {
     display: flex;
-    align-items: center;
     justify-content: space-between;
-    width: 100%;
 }
 
 .toast-text {
