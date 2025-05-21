@@ -340,7 +340,7 @@ class PromptDjController extends LitElement {
       ]
 
       `
-      LOADED_DEFAULT_PROMPTS = await response.json();
+      LOADED_DEFAULT_PROMPTS = response;
       this.prompts = getInitialPrompts();
       this.requestUpdate();
     } catch (error) {
